@@ -8,7 +8,7 @@ import numpy as np
 import timeit
 import matplotlib.pyplot as plt
 import sys
-from multiprocessing.pool import ThreadPool
+from utils.threading.worker import WorkersGroup
 
 class Action:
     num_actions = 4
@@ -52,8 +52,49 @@ class EnvironmentFactory:
             env = DeterministicEnvironment()
             
         return env
+
+class EnvironmentBase:
+    def reward(self):
+        player_pos = self.player_abs_from_state()
+        if player_pos == self.pit:
+            return -10
+        elif player_pos == self.goal:
+            return 10
+        else:
+            return -100
+        
+    def is_done(self):
+        player_pos = self.player_abs_from_state()
+        return player_pos == self.pit or player_pos == self.goal
+    
+    def player_cartesian(self):
+        player_abs_pos = self.player_abs_from_state()
+        return (int(player_abs_pos / self.size), player_abs_pos % self.size)
+    
+    def update_state(self, player_loc_cartesian):
+        player_abs_pos = int(player_loc_cartesian[0] * self.size + player_loc_cartesian[1])
+        self.state = self.player_abs_to_state(player_abs_pos)
+        
+    def get_state(self, player_loc_cartesian):
+        player_abs_pos = int(player_loc_cartesian[0] * self.size + player_loc_cartesian[1])
+        return self.player_abs_to_state(player_abs_pos)
             
-class RandomGoalAndPlayerEnvironment():
+    def show(self):
+        grid = np.zeros((env.size, env.size), dtype='<U2')
+
+        for i in range(0, env.size):
+            for j in range(0, env.size):
+                grid[i, j] = ' '
+    
+
+        grid[self.player_cartesian()] = 'P'  # player starting point
+        grid[self.wall_cartesian] = 'W'  # wall
+        grid[self.goal_cartesian] = '+'  # goal
+        grid[self.pit_cartesian] = '-'  # pit
+    
+        print(grid)
+
+class RandomGoalAndPlayerEnvironment(EnvironmentBase):
     def __init__(self):
         self.size = 4
         self.grid_size = self.size * self.size
@@ -61,55 +102,27 @@ class RandomGoalAndPlayerEnvironment():
         self.wall = 10
         self.wall_cartesian = (2, 2)
         self.pit = 5
-        self.pit_cartesian = (1, 1)        
+        self.pit_cartesian = (1, 1)
+        # Initialize goal random location
         self.goal = np.random.choice(self.grid_size)
         while self.goal in [self.wall, self.pit]:
             self.goal = np.random.choice(self.grid_size)
         self.goal_cartesian = (int(self.goal / self.size), int(self.goal % self.size))
+        # Initialize player random location
         self.player_starting_point = np.random.choice(self.grid_size)
         while self.player_starting_point in [self.wall, self.pit, self.goal]:
             self.player_starting_point = np.random.choice(self.grid_size)
+
         self.state = int(self.player_starting_point * self.grid_size) + self.goal
-        
-    def update_state(self, player_loc):
-        player_pos = player_loc[0] * self.size + player_loc[1]
-        self.state = int(player_pos * self.grid_size) + self.goal
-        
-    def get_state(self, player_loc):
-        player_pos = player_loc[0] * self.size + player_loc[1]
-        return int(player_pos * self.grid_size) + self.goal
     
-    def is_done(self):
-        player_pos = int(self.state / self.grid_size)
-        return player_pos == self.pit or player_pos == self.goal
+    def player_abs_to_state(self, player_abs):
+        return int(player_abs * self.grid_size) + self.goal
     
-    def reward(self):
-        player_pos = int(self.state / self.grid_size)
-        if player_pos == self.pit:
-            return -10
-        elif player_pos == self.goal:
-            return 10
-        else:
-            return -10
-        
-    def show(self):
-        grid = np.zeros((env.size, env.size), dtype='<U2')
-        player_pos = int(self.state / self.grid_size)
-        player_loc = (int(player_pos / self.size), player_pos % self.size)
-
-        for i in range(0, env.size):
-            for j in range(0, env.size):
-                grid[i, j] = ' '
+    def player_abs_from_state(self):
+        return int(self.state / self.grid_size)
     
 
-        grid[player_loc] = 'P'  # player starting point
-        grid[self.wall_cartesian] = 'W'  # wall
-        grid[self.goal_cartesian] = '+'  # goal
-        grid[self.pit_cartesian] = '-'  # pit
-    
-        print(grid)
-    
-class DeterministicEnvironment:
+class DeterministicEnvironment(EnvironmentBase):
     def __init__(self):
         self.size = 4
         self.grid_size = self.size * self.size
@@ -123,44 +136,12 @@ class DeterministicEnvironment:
         self.pit = 5
         self.pit_cartesian = (1, 1)
     
-    def update_state(self, player_loc):
-        self.state = int(player_loc[0] * self.size + player_loc[1])
-        
-    def get_state(self, player_loc):
-        return player_loc[0] * self.size + player_loc[1]
+    def player_abs_to_state(self, player_abs):
+        return player_abs
     
-    def is_done(self):
-        return self.state == self.pit or self.state == self.goal 
+    def player_abs_from_state(self):
+        return self.state
     
-    def reward(self):
-        if self.state == self.pit:
-            return -10
-        elif self.state == self.goal:
-            return 10
-        else:
-            return -1
-        
-    def show(self):
-        grid = np.zeros((env.size, env.size), dtype='<U2')
-        player_loc = (int(self.state / self.size), self.state % self.size)
-        wall = (int(self.wall / self.size), self.wall % self.size)
-        goal = (int(self.goal / self.size), self.goal % self.size)
-        pit = (int(self.pit / self.size), self.pit % self.size)
-
-        for i in range(0, env.size):
-            for j in range(0, env.size):
-                grid[i, j] = ' '
-    
-        if player_loc:
-            grid[player_loc] = 'P'  # player starting point
-        if wall:
-            grid[wall] = 'W'  # wall
-        if goal:
-            grid[goal] = '+'  # goal
-        if pit:
-            grid[pit] = '-'  # pit
-    
-        print(grid)
     
 class Agent:
     def __init__(self, eps=1, alpha=0.5, verbose=False):
@@ -401,24 +382,16 @@ def evaluate_parallel(agent, env_factory, num_iterations, verbosity=0, num_threa
         
     start_time = timeit.default_timer()
     
-#     agents = [agent]
-#     for _ in range(num_threads - 1):
-#         agents.append(agent.copy())
+    args = (agent, env_factory, int(num_iterations / num_threads), verbosity)
+    wg = WorkersGroup(num_threads, target=evaluate, args=args)
+    res = wg.run()
     
-    pool = ThreadPool(num_threads)
-    res = []
-    for _ in range(num_threads):
-        r = pool.apply_async(evaluate, (agent, env_factory, int(num_iterations / num_threads), verbosity))
-        res.append(r)
-    
-    rewards = 0
-    for r in res:
-        rewards += r.get()
+    reward = np.array(res).mean()
     
     elapsed = timeit.default_timer() - start_time
     if verbosity >= 1:
         print("Total evaluation time %.3f[ms]" % (elapsed * 1000))
-    return rewards / num_threads
+    return reward
 
 def evaluate(agent, env_factory, num_iterations, verbosity=0):
     if verbosity >= 1:
@@ -447,8 +420,8 @@ np.random.seed(0)
 
 if __name__ == '__main__':
     # Prepare Agent
-    verbosity = 0  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
-    env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.RandomPlayerAndGoal)
+    verbosity = 1  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
+    env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.RandomPlayer)
     env = env_factory.create_environment()
     agent = Agent(verbose=(verbosity >= 3))
     if verbosity >= 1:
@@ -459,7 +432,7 @@ if __name__ == '__main__':
     
     start_time = timeit.default_timer()
     
-    train_it = 20 if env_factory.env_type == EnvironmentFactory.EnvironmentType.RandomPlayerAndGoal else 10
+    train_it = 200 if env_factory.env_type == EnvironmentFactory.EnvironmentType.RandomPlayerAndGoal else 10
     eval_it = env.num_states * 4
     converged = False
     CONVERGENCE_RATIO = 0.001
@@ -471,7 +444,7 @@ if __name__ == '__main__':
     while not converged:
         steps = train(agent, env_factory, train_it, verbosity)
         total_steps += steps
-        mean_reward = evaluate_parallel(agent, env_factory, eval_it, verbosity, num_threads=4)
+        mean_reward = evaluate_parallel(agent, env_factory, eval_it, verbosity, num_threads=1)
         rewards.append(mean_reward)
         if prev_mean_reward != None:
             diff = mean_reward - prev_mean_reward
