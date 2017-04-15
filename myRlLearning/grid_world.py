@@ -10,6 +10,10 @@ import matplotlib.pyplot as plt
 import sys
 from utils.threading.worker import WorkersGroup
 
+REWARD_GOAL = 10
+REWARD_PIT = -10
+REWARD_HANG = -100
+
 class Action:
     num_actions = 4
     UP = 0
@@ -34,28 +38,50 @@ class EnvironmentFactory:
         Deterministic = 0
         RandomPlayer = 1
         RandomPlayerAndGoal = 2
+        RandomPlayerGoalAndPit = 3
         
     def __init__(self, env_type):
         self.env_type = env_type
         
-    def create_environment(self): 
-        if self.env_type == EnvironmentFactory.EnvironmentType.RandomPlayer:
-            env = DeterministicEnvironment()
-            start_pos = np.random.choice(env.num_states)
-            while start_pos in [env.goal, env.pit, env.wall]:
-                start_pos = np.random.choice(env.num_states)
-            env.player_starting_point = start_pos
-            env.state = start_pos
+    def create_environment(self, state=None):
+        if self.env_type == EnvironmentFactory.EnvironmentType.Deterministic:
+            cls = DeterministicEnvironment
+        elif self.env_type == EnvironmentFactory.EnvironmentType.RandomPlayer:
+            cls = RandomPlayerEnvironment
         elif self.env_type == EnvironmentFactory.EnvironmentType.RandomPlayerAndGoal:
-            env = RandomGoalAndPlayerEnvironment()
+            cls = RandomGoalAndPlayerEnvironment
+        elif self.env_type == EnvironmentFactory.EnvironmentType.RandomPlayerGoalAndPit:
+            cls = RandomGoalPlayerAndPitEnvironment
         else:
-            env = DeterministicEnvironment()
-            
+            cls = None
+        
+        if state == None:
+            env = cls()
+        else:
+            env = cls.from_state(state)
         return env
 
 class EnvironmentBase:
+    size = 4
+    grid_size = size * size
+    grid_size_square = grid_size ** 2
+    
+    def __init__(self, player, goal, pit, wall, state):
+        # Assume that all parameters are valid
+        self.player_starting_point = player
+        self.goal = goal
+        self.goal_cartesian = (int(self.goal / self.size), int(self.goal % self.size))
+        self.pit = pit
+        self.pit_cartesian = (int(self.pit / self.size), int(self.pit % self.size))
+        self.wall = wall
+        self.wall_cartesian = (int(self.wall / self.size), int(self.wall % self.size))
+        self.state = state
+    
+    def __str__(self):
+        return "state %d, player %d, goal %d, pit %d, wall %d" % (self.state, self.player_starting_point, self.goal, self.pit, self.wall)
+      
     def reward(self):
-        player_pos = self.player_abs_from_state()
+        player_pos = self.player_abs_from_state(self.state)
         if player_pos == self.pit:
             return -10
         elif player_pos == self.goal:
@@ -64,11 +90,11 @@ class EnvironmentBase:
             return -100
         
     def is_done(self):
-        player_pos = self.player_abs_from_state()
+        player_pos = self.player_abs_from_state(self.state)
         return player_pos == self.pit or player_pos == self.goal
     
     def player_cartesian(self):
-        player_abs_pos = self.player_abs_from_state()
+        player_abs_pos = self.player_abs_from_state(self.state)
         return (int(player_abs_pos / self.size), player_abs_pos % self.size)
     
     def update_state(self, player_loc_cartesian):
@@ -80,10 +106,10 @@ class EnvironmentBase:
         return self.player_abs_to_state(player_abs_pos)
             
     def show(self):
-        grid = np.zeros((env.size, env.size), dtype='<U2')
+        grid = np.zeros((self.size, self.size), dtype='<U2')
 
-        for i in range(0, env.size):
-            for j in range(0, env.size):
+        for i in range(0, self.size):
+            for j in range(0, self.size):
                 grid[i, j] = ' '
     
 
@@ -93,54 +119,183 @@ class EnvironmentBase:
         grid[self.pit_cartesian] = '-'  # pit
     
         print(grid)
-
-class RandomGoalAndPlayerEnvironment(EnvironmentBase):
-    def __init__(self):
-        self.size = 4
-        self.grid_size = self.size * self.size
-        self.num_states = self.grid_size ** 2
-        self.wall = 10
-        self.wall_cartesian = (2, 2)
-        self.pit = 5
-        self.pit_cartesian = (1, 1)
-        # Initialize goal random location
-        self.goal = np.random.choice(self.grid_size)
-        while self.goal in [self.wall, self.pit]:
-            self.goal = np.random.choice(self.grid_size)
-        self.goal_cartesian = (int(self.goal / self.size), int(self.goal % self.size))
-        # Initialize player random location
-        self.player_starting_point = np.random.choice(self.grid_size)
-        while self.player_starting_point in [self.wall, self.pit, self.goal]:
-            self.player_starting_point = np.random.choice(self.grid_size)
-
-        self.state = int(self.player_starting_point * self.grid_size) + self.goal
-    
-    def player_abs_to_state(self, player_abs):
-        return int(player_abs * self.grid_size) + self.goal
-    
-    def player_abs_from_state(self):
-        return int(self.state / self.grid_size)
-    
+        
+    @classmethod
+    def from_state(cls, state):
+        player = cls.player_abs_from_state(state)
+        goal = cls.goal_abs_from_state(state)
+        pit = cls.pit_abs_from_state(state)
+        wall = cls.wall_abs_from_state(state)
+        
+        # Check validity
+        if player in [goal, pit, wall] or goal in [pit, wall] or pit in [wall]:
+            return None
+        
+        return cls(player, goal, pit, wall, state)
 
 class DeterministicEnvironment(EnvironmentBase):
-    def __init__(self):
-        self.size = 4
-        self.grid_size = self.size * self.size
+    def __init__(self, player=None, goal=None, pit=None, wall=None, state=None):
         self.num_states = self.grid_size
-        self.player_starting_point = 0
-        self.state = self.player_starting_point
-        self.wall = 10
-        self.wall_cartesian = (2, 2)
-        self.goal = 15
-        self.goal_cartesian = (3, 3)
-        self.pit = 5
-        self.pit_cartesian = (1, 1)
+        
+        if state != None:
+            super(DeterministicEnvironment, self).__init__(player, goal, pit, wall, state)
+        else:
+            self.player_starting_point = 0
+            self.wall = 10
+            self.wall_cartesian = (2, 2)
+            self.goal = 15
+            self.goal_cartesian = (3, 3)
+            self.pit = 5
+            self.pit_cartesian = (1, 1)
+            
+            self.state = self.player_abs_to_state(self.player_starting_point)
     
     def player_abs_to_state(self, player_abs):
+        # In this environment everything initialized deterministically. Player can change position so it's location represent the state of the world.
         return player_abs
     
-    def player_abs_from_state(self):
-        return self.state
+    @classmethod
+    def player_abs_from_state(cls, state):
+        # State represent's player position
+        return state
+    
+    @classmethod
+    def goal_abs_from_state(cls, state):
+        # In this environment goal is fixed
+        return 15
+    
+    @classmethod
+    def pit_abs_from_state(cls, state):
+        # In this environment pit is fixed
+        return 5
+    
+    @classmethod
+    def wall_abs_from_state(cls, state):
+        # In this environment wall is fixed
+        return 10
+
+class RandomPlayerEnvironment(DeterministicEnvironment):
+    def __init__(self, player=None, goal=None, pit=None, wall=None, state=None):
+        self.num_states = self.grid_size
+        
+        if state != None:
+            super(RandomPlayerEnvironment, self).__init__(player, goal, pit, wall, state)
+        else:
+            self.wall = 10
+            self.wall_cartesian = (2, 2)
+            self.goal = 15
+            self.goal_cartesian = (3, 3)
+            self.pit = 5
+            self.pit_cartesian = (1, 1)
+            
+            # Initialize player random location
+            self.player_starting_point = np.random.choice(self.grid_size)
+            while self.player_starting_point in [self.wall, self.pit, self.goal]:
+                self.player_starting_point = np.random.choice(self.grid_size)
+            
+            self.state = self.player_abs_to_state(self.player_starting_point)
+
+class RandomGoalAndPlayerEnvironment(EnvironmentBase):
+    def __init__(self, player=None, goal=None, pit=None, wall=None, state=None):
+        if state != None:
+            super(RandomGoalAndPlayerEnvironment, self).__init__(player, goal, pit, wall, state)
+        else:
+            self.num_states = self.grid_size ** 2
+            self.wall = 10
+            self.wall_cartesian = (2, 2)
+            self.pit = 5
+            self.pit_cartesian = (1, 1)
+    
+            # Initialize goal random location
+            self.goal = np.random.choice(self.grid_size)
+            while self.goal in [self.wall, self.pit]:
+                self.goal = np.random.choice(self.grid_size)
+            self.goal_cartesian = (int(self.goal / self.size), int(self.goal % self.size))
+            
+            # Initialize player random location
+            self.player_starting_point = np.random.choice(self.grid_size)
+            while self.player_starting_point in [self.wall, self.pit, self.goal]:
+                self.player_starting_point = np.random.choice(self.grid_size)
+    
+            self.state = self.player_abs_to_state(self.player_starting_point)
+    
+    def player_abs_to_state(self, player_abs):
+        # We represent state as linear combination of (player and goal) were coordinates are (y,x) accordingly
+        # So state = y*a + x where y is player coordinate and x - goal 
+        return int(player_abs * self.grid_size + self.goal)
+    
+    @classmethod
+    def player_abs_from_state(cls, state):
+        # We need to find y coordinate from state = y*a + x so it just state/a
+        return int(state / cls.grid_size)
+    
+    @classmethod
+    def goal_abs_from_state(cls, state):
+        # We need to find x coordinate from state = y*a + x so it just state mod a
+        return int(state % cls.grid_size)
+    
+    @classmethod
+    def pit_abs_from_state(cls, state):
+        # In this environment pit is fixed
+        return 5
+    
+    @classmethod
+    def wall_abs_from_state(cls, state):
+        # In this environment wall is fixed
+        return 10
+
+class RandomGoalPlayerAndPitEnvironment(EnvironmentBase):    
+    def __init__(self, player=None, goal=None, pit=None, wall=None, state=None):
+        if state != None:
+            super(RandomGoalPlayerAndPitEnvironment, self).__init__(player, goal, pit, wall, state)
+        else:
+            self.num_states = self.grid_size ** 3
+            self.wall = 10
+            self.wall_cartesian = (2, 2)
+            
+            # Initialize goal random location
+            self.pit = np.random.choice(self.grid_size)
+            while self.pit in [self.wall]:
+                self.pit = np.random.choice(self.grid_size)
+            self.pit_cartesian = (int(self.pit / self.size), int(self.pit % self.size))
+    
+            # Initialize goal random location
+            self.goal = np.random.choice(self.grid_size)
+            while self.goal in [self.wall, self.pit]:
+                self.goal = np.random.choice(self.grid_size)
+            self.goal_cartesian = (int(self.goal / self.size), int(self.goal % self.size))
+    
+            # Initialize player random location
+            self.player_starting_point = np.random.choice(self.grid_size)
+            while self.player_starting_point in [self.wall, self.pit, self.goal]:
+                self.player_starting_point = np.random.choice(self.grid_size)
+    
+            self.state = self.player_abs_to_state(self.player_starting_point)
+    
+    def player_abs_to_state(self, player_abs):
+        # We represent state as linear combination of (player, goal and pit) were coordinates are (z,y,x) accordingly
+        # So state = z*a^2 + y*a + x where z is player coordinate, y - goal and x - pit 
+        return int(player_abs * self.grid_size_square + self.goal * self.grid_size + self.pit)
+
+    @classmethod
+    def player_abs_from_state(cls, state):
+        # We need to find z coordinate from state = z*a^2 + y*a + x
+        return int(state / cls.grid_size_square)
+        
+    @classmethod
+    def goal_abs_from_state(cls, state):
+        # We need to find y coordinate from state = z*a^2 + y*a + x
+        return int((state % cls.grid_size_square) / cls.grid_size)
+    
+    @classmethod
+    def pit_abs_from_state(cls, state):
+        # We need to find x coordinate from state = z*a^2 + y*a + x
+        return int(float(state % cls.grid_size_square) % cls.grid_size)
+    
+    @classmethod
+    def wall_abs_from_state(cls, state):
+        # In this environment wall is fixed
+        return 10
     
     
 class Agent:
@@ -416,12 +571,65 @@ def evaluate(agent, env_factory, num_iterations, verbosity=0):
         print("Evaluation time %.3f[ms]" % (elapsed * 1000))
     return rewards.mean()
 
+def evaluate_states(agent, env_factory, first, last, verbosity=0):
+    if verbosity >= 1:
+        print("Evaluating agent from state %d to state %d." % (first, last))
+    start_time = timeit.default_timer()
+    num_iterations = last - first + 1
+    rewards = np.empty(num_iterations)
+    rewards[:] = np.NaN
+    for i in range(num_iterations):
+        env = env_factory.create_environment(first + i)
+        if env != None:
+            if verbosity >= 3:
+                print()
+                env.show()
+            path = agent.run(env, max_steps=env.grid_size)
+            
+            if verbosity >= 3 or (verbosity >= 2 and env.reward() == REWARD_PIT):
+                print("Failed environment:")
+                env_factory.create_environment(first + i).show()
+                print("Agent path")
+                print(path)
+                print("Reward: %.1f" % env.reward())
+            rewards[i] = env.reward()
+    
+    if verbosity >= 1:
+        print("Valid states checked %d from total %d" % (num_iterations - len(rewards[np.isnan(rewards)]), num_iterations))
+        success = rewards[rewards == REWARD_GOAL].size
+        fail = rewards[rewards == REWARD_PIT].size
+        hang = rewards[rewards == REWARD_HANG].size
+        print("%d ended at goal, %d at pit, %d hanged." % (success, fail, hang))
+    elapsed = timeit.default_timer() - start_time
+    if verbosity >= 1:
+        print("Evaluation time %.3f[ms]" % (elapsed * 1000))
+    return np.nanmean(rewards)
+
 np.random.seed(0)
+
+def test_states():
+    env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.RandomPlayerGoalAndPit)
+    env0 = env_factory.create_environment()
+    valid_envs = 0
+    for z_player in range(env0.grid_size):
+        for y_goal in range(env0.grid_size):
+            for x_pit in range(env0.grid_size):
+                state = int(z_player * env0.grid_size_square + y_goal * env0.grid_size + x_pit)
+                env = env_factory.create_environment(state)
+                if(env != None):
+                    valid_envs += 1
+                    try:
+                        env.show()
+                    except IndexError:
+                        print("Error: " + str(env))
+                        break 
+                    
+    print("Valid environments %d" % valid_envs)
 
 if __name__ == '__main__':
     # Prepare Agent
     verbosity = 1  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
-    env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.RandomPlayer)
+    env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.RandomPlayerGoalAndPit)
     env = env_factory.create_environment()
     agent = Agent(verbose=(verbosity >= 3))
     if verbosity >= 1:
@@ -432,8 +640,16 @@ if __name__ == '__main__':
     
     start_time = timeit.default_timer()
     
-    train_it = 200 if env_factory.env_type == EnvironmentFactory.EnvironmentType.RandomPlayerAndGoal else 10
-    eval_it = env.num_states * 4
+    if env_factory.env_type == EnvironmentFactory.EnvironmentType.RandomPlayerAndGoal:
+        train_it = 200
+        eval_it = env.num_states * 4
+    elif env_factory.env_type == EnvironmentFactory.EnvironmentType.RandomPlayerGoalAndPit:
+        train_it = 2000
+        eval_it = env.num_states * 4
+    else:  
+        train_it = 10
+        eval_it = env.num_states * 4
+
     converged = False
     CONVERGENCE_RATIO = 0.001
     rewards = []
@@ -444,7 +660,7 @@ if __name__ == '__main__':
     while not converged:
         steps = train(agent, env_factory, train_it, verbosity)
         total_steps += steps
-        mean_reward = evaluate_parallel(agent, env_factory, eval_it, verbosity, num_threads=1)
+        mean_reward = evaluate_states(agent, env_factory, 0, env.num_states - 1, verbosity)
         rewards.append(mean_reward)
         if prev_mean_reward != None:
             diff = mean_reward - prev_mean_reward
@@ -465,6 +681,9 @@ if __name__ == '__main__':
         itt += 1        
     
     elapsed = timeit.default_timer() - start_time
+    
+    if verbosity >= 1:
+        evaluate_states(agent, env_factory, 0, env.num_states - 1, verbosity=2)
     
     print()
     print("Training finished after %d iterations. Total learning steps are %d." % (itt, total_steps))
