@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from myRlLearning.grid_world import EnvironmentFactory, REWARD_GOAL, REWARD_HANG, REWARD_PIT
 import numpy as np
 from utils.threading.worker import WorkersGroup
-
+from collections import deque
 
 class Action:
     num_actions = 4
@@ -130,7 +130,7 @@ class Agent:
         reward = env.reward()
         target = reward
 #         print(self.state_history)
-        V[self.state_history.pop()] = target
+        self.V[self.state_history.pop()] = target
         for prev in reversed(self.state_history):
             value = self.V[prev] + self.alpha * (target - self.V[prev])
             self.V[prev] = value
@@ -233,11 +233,13 @@ def single_episode_train(agent, env, verbosity):
         print("Random actions %d, greedy actions %d" % (agent.random_actions, agent.greedy_actions))
 
 
-def train(agent, env_factory, num_iterations, verbosity=0):
+def train_states(agent, env_factory, first, last, verbosity=0):
     steps = 0
+    num_iterations = last - first + 1
     if verbosity >= 1:
         print("Train agent for %d iterations." % num_iterations)
     start_time = timeit.default_timer()
+    states = set()
     for t in range(num_iterations):
         if verbosity >= 2:
             print("\nEpoch #%d" % t)
@@ -246,9 +248,12 @@ def train(agent, env_factory, num_iterations, verbosity=0):
                 sys.stdout.write('.')
                 sys.stdout.flush()
         # For each episode create new environment so agent will face different starting positions and object locations.
-        env = env_factory.create_environment()
+        env = env_factory.create_environment(first + t)
+        if env == None:
+            continue
         single_episode_train(agent, env, verbosity)
-        steps += len(agent.state_history)      
+        steps += len(agent.state_history)
+        states.update(agent.state_history)      
         if verbosity >= 2:
             print("Episode reward: %f" % env.reward())
     
@@ -260,6 +265,46 @@ def train(agent, env_factory, num_iterations, verbosity=0):
         print("Training time %.3f[ms]" % (elapsed * 1000))
     if verbosity == 0:
         print(" %d" % steps)
+    return steps, states
+
+def multi_agent_training(agents, env_factory, num_iterations, verbosity=0, factor=2):
+    steps = 0
+    env0 = env_factory.create_environment()
+    if verbosity >= 1:
+        print("Train agents for %d iterations." % env0.num_states)
+    start_time = timeit.default_timer()
+    
+    if num_iterations % len(agents) != 0:
+        raise RuntimeError("Number of iterations must be multiply of number of agents")
+    it_per_agent = int(num_iterations / len(agents))
+    
+    states_per_agent = []
+    for i in range(len(agents)):
+        stps, states = train_states(agents[i], env_factory, i * it_per_agent, ((i + 1) * it_per_agent) - 1, verbosity)
+        states_per_agent.append(np.array(list(states)))
+        steps += stps
+    
+    if verbosity >= 1 and len(agents) > 1:
+        print("Evaluate agents before mutual update")
+        for agent in agents:
+            evaluate_states(agent, env_factory, 0, num_iterations - 1, verbosity)
+    
+    # Update agents from each other
+    for i in range(len(agents)):
+        for j in range(len(agents)):
+            # Update agent i from all agents j != i
+            if i != j:
+                agents[i].V[states_per_agent[j]] = (factor * agents[i].V[states_per_agent[j]] + agents[j].V[states_per_agent[j]]) / (factor + 1)
+
+    elapsed = timeit.default_timer() - start_time
+    
+#     if verbosity >= 1 and len(agents) > 1:
+#         print("Evaluate agents after mutual update")
+#         for agent in agents:
+#             evaluate_states(agent, env_factory, 0, num_iterations - 1, verbosity)
+    
+    if verbosity >= 1:
+        print("Multi agents training time %.3f[ms]" % (elapsed * 1000))    
     return steps
 
 def evaluate_parallel(agent, env_factory, num_iterations, verbosity=0, num_threads=1):
@@ -306,9 +351,9 @@ def evaluate(agent, env_factory, num_iterations, verbosity=0):
     return rewards.mean()
 
 def evaluate_states(agent, env_factory, first, last, verbosity=0):
-    if verbosity >= 1:
+    if verbosity >= 2:
         print("Evaluating agent from state %d to state %d." % (first, last))
-    start_time = timeit.default_timer()
+        start_time = timeit.default_timer()
     num_iterations = last - first + 1
     rewards = np.empty(num_iterations)
     rewards[:] = np.NaN
@@ -328,14 +373,15 @@ def evaluate_states(agent, env_factory, first, last, verbosity=0):
                 print("Reward: %.1f" % env.reward())
             rewards[i] = env.reward()
     
-    if verbosity >= 1:
+    if verbosity >= 2:
         print("Valid states checked %d from total %d" % (num_iterations - len(rewards[np.isnan(rewards)]), num_iterations))
+    if verbosity >= 1:
         success = rewards[rewards == REWARD_GOAL].size
         fail = rewards[rewards == REWARD_PIT].size
         hang = rewards[rewards == REWARD_HANG].size
         print("%d ended at goal, %d at pit, %d hanged." % (success, fail, hang))
-    elapsed = timeit.default_timer() - start_time
-    if verbosity >= 1:
+    if verbosity >= 2:
+        elapsed = timeit.default_timer() - start_time
         print("Evaluation time %.3f[ms]" % (elapsed * 1000))
     return np.nanmean(rewards)
 
@@ -360,28 +406,32 @@ def test_states():
                     
     print("Valid environments %d" % valid_envs)
 
+def create_agent():
+    agent = Agent(verbose=(verbosity >= 3))
+    V = np.zeros(env.num_states)
+    agent.setV(V)
+    return agent
+    
 if __name__ == '__main__':
     # Prepare Agent
     verbosity = 1  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
-    env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.RandomPlayer)
+    env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.RandomPlayerGoalAndPit)
     env = env_factory.create_environment()
-    agent = Agent(verbose=(verbosity >= 3))
+
     if verbosity >= 1:
         env.show()
         print()
-    V = np.zeros(env.num_states)
-    agent.setV(V)
     
     start_time = timeit.default_timer()
     
     if env_factory.env_type == EnvironmentFactory.EnvironmentType.RandomPlayerAndGoal:
-        train_it = 200
+        train_it = env.num_states
         eval_it = env.num_states * 4
     elif env_factory.env_type == EnvironmentFactory.EnvironmentType.RandomPlayerGoalAndPit:
-        train_it = 2000
+        train_it = env.num_states
         eval_it = env.num_states * 4
     else:  
-        train_it = 10
+        train_it = env.num_states
         eval_it = env.num_states * 4
 
     converged = False
@@ -391,33 +441,48 @@ if __name__ == '__main__':
     prev_mean_reward = None
     total_steps = 0
     itt = 0
+#     agents = deque([create_agent(), create_agent(), create_agent(), create_agent()])
+#     agents = deque([create_agent(), create_agent()])
+    agents = deque([create_agent()])
+    factor = 2
     while not converged:
-        steps = train(agent, env_factory, train_it, verbosity)
+        steps = multi_agent_training(agents, env_factory, train_it, verbosity, factor=factor)
+        factor *= 4
         total_steps += steps
-        mean_reward = evaluate_states(agent, env_factory, 0, env.num_states - 1, verbosity)
+        mean_reward = -100
+        print("Evaluate agents to test convergence")
+        for agent in agents:
+            reward = evaluate_states(agents[0], env_factory, 0, env.num_states - 1, verbosity)
+            if reward > mean_reward:
+                mean_reward = reward
         rewards.append(mean_reward)
-        if prev_mean_reward != None:
-            diff = mean_reward - prev_mean_reward
-            deltas.append(diff)
-            prev_mean_reward = mean_reward
-            if verbosity >= 1:
-                print("Session %d of Training/Evaluation finished, reward: %f, delta %f." % (itt, mean_reward, diff))
-                print("%d training steps performed in past iteration." % steps)
-            if np.abs(diff) < CONVERGENCE_RATIO:
-                converged = True                
-        else:
-            prev_mean_reward = mean_reward
-            if verbosity >= 1:
-                print("Session %d of Training/Evaluation finished, reward: %f." % (itt, mean_reward))
-                print("%d training steps performed in past iteration." % steps)
+        if mean_reward == REWARD_GOAL:
+            converged = True
+        
+#         if prev_mean_reward != None:
+#             diff = mean_reward - prev_mean_reward
+#             deltas.append(diff)
+#             prev_mean_reward = mean_reward
+#             if verbosity >= 1:
+#                 print("Session %d of Training/Evaluation finished, reward: %f, delta %f." % (itt, mean_reward, diff))
+#                 print("%d training steps performed in past iteration." % steps)
+#             if np.abs(diff) < CONVERGENCE_RATIO:
+#                 converged = True                
+#         else:
+#             prev_mean_reward = mean_reward
+#             if verbosity >= 1:
+#                 print("Session %d of Training/Evaluation finished, reward: %f." % (itt, mean_reward))
+#                 print("%d training steps performed in past iteration." % steps)
         if verbosity >= 1:
             print()
         itt += 1        
+        agents.rotate()
     
     elapsed = timeit.default_timer() - start_time
     
     if verbosity >= 1:
-        evaluate_states(agent, env_factory, 0, env.num_states - 1, verbosity=2)
+        for agent in agents:
+            evaluate_states(agent, env_factory, 0, env.num_states - 1, verbosity=2)
     
     print()
     print("Training finished after %d iterations. Total learning steps are %d." % (itt, total_steps))
@@ -425,6 +490,6 @@ if __name__ == '__main__':
     print("Final reward %f" % rewards[-1:][0])
     print("Saving V table to vtable.bin")
 #     V.tofile('vtable.bin')
-    plt.plot(rewards, 'g', deltas, 'r')
+    plt.plot(rewards, 'g')
     plt.show()
     print('Done')
