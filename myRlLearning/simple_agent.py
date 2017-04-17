@@ -248,7 +248,7 @@ class Trainer:
             
         states = set()
         for s in mini_batch:
-            if verbosity >= 2:
+            if verbosity >= 3:
                 print("\nEpoch #%d" % s)
             # For each episode create new environment so agent will face different starting positions and object locations.
             env = self.env_factory.create_environment(s)
@@ -291,9 +291,8 @@ class Trainer:
                     print("Reward: %.1f" % env.reward())
                 rewards[i] = env.reward()
         
-        if verbosity >= 2:
-            print("Valid states checked %d from total %d" % (num_iterations - len(rewards[np.isnan(rewards)]), num_iterations))
         if verbosity >= 1:
+            print("Valid states checked %d from total %d" % (num_iterations - len(rewards[np.isnan(rewards)]), num_iterations))
             success = rewards[rewards == REWARD_GOAL].size
             fail = rewards[rewards == REWARD_PIT].size
             hang = rewards[rewards == REWARD_HANG].size
@@ -409,7 +408,7 @@ class MultiAgentTrainer:
         return rewards
 
 
-def create_agent():
+def create_agent(verbosity):
     agent = Agent(verbose=(verbosity >= 3))
     V = np.zeros(env.num_states)
     agent.setV(V)
@@ -432,13 +431,13 @@ if __name__ == '__main__':
     rewards = []
     total_steps = 0
     total_iterations = 0
-    async = True
+    async = False
     if async:
         num_agents = int(math.pow(2, int(math.log(cpu_count(), 2))))
-        agents = deque([create_agent() for _ in range(num_agents)])
+        agents = deque([create_agent(verbosity) for _ in range(num_agents)])
 #     agents = deque([create_agent(), create_agent()])
     else:
-        agents = deque([create_agent()])
+        agents = deque([create_agent(verbosity)])
     trainer = MultiAgentTrainer(env_factory)
     while not converged:
         steps = trainer.train(agents, env.num_states, verbosity, async=async)
