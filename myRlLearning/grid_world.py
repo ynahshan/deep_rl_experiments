@@ -16,6 +16,7 @@ class EnvironmentFactory:
         RandomPlayer = 1
         RandomPlayerAndGoal = 2
         RandomPlayerGoalAndPit = 3
+        AllRandom = 4
         
     def __init__(self, env_type):
         self.env_type = env_type
@@ -29,6 +30,8 @@ class EnvironmentFactory:
             cls = RandomGoalAndPlayerEnvironment
         elif self.env_type == EnvironmentFactory.EnvironmentType.RandomPlayerGoalAndPit:
             cls = RandomGoalPlayerAndPitEnvironment
+        elif self.env_type == EnvironmentFactory.EnvironmentType.AllRandom:
+            cls = FullyRandomEnvironment
         else:
             cls = None
         
@@ -42,6 +45,7 @@ class EnvironmentBase:
     size = 4
     grid_size = size * size
     grid_size_square = grid_size ** 2
+    grid_size_cube = grid_size ** 3
     
     def __init__(self, player, goal, pit, wall, state):
         # Assume that all parameters are valid
@@ -275,5 +279,57 @@ class RandomGoalPlayerAndPitEnvironment(EnvironmentBase):
         return 10
 
 
+class FullyRandomEnvironment(EnvironmentBase):    
+    def __init__(self, player=None, goal=None, pit=None, wall=None, state=None):
+        if state != None:
+            super(FullyRandomEnvironment, self).__init__(player, goal, pit, wall, state)
+        else:
+            self.num_states = self.grid_size ** 4
+            # Initialize wall random location
+            self.wall = np.random.choice(self.grid_size)
+            self.wall_cartesian = (int(self.wall / self.size), int(self.wall % self.size))
+            
+            # Initialize goal random location
+            self.pit = np.random.choice(self.grid_size)
+            while self.pit in [self.wall]:
+                self.pit = np.random.choice(self.grid_size)
+            self.pit_cartesian = (int(self.pit / self.size), int(self.pit % self.size))
+    
+            # Initialize goal random location
+            self.goal = np.random.choice(self.grid_size)
+            while self.goal in [self.wall, self.pit]:
+                self.goal = np.random.choice(self.grid_size)
+            self.goal_cartesian = (int(self.goal / self.size), int(self.goal % self.size))
+    
+            # Initialize player random location
+            self.player_starting_point = np.random.choice(self.grid_size)
+            while self.player_starting_point in [self.wall, self.pit, self.goal]:
+                self.player_starting_point = np.random.choice(self.grid_size)
+    
+            self.state = self.player_abs_to_state(self.player_starting_point)
+    
+    def player_abs_to_state(self, player_abs):
+        # We represent state as linear combination of (player, goal, pit and wall) were coordinates are (z,y,x,w) accordingly
+        # So state = z*a^3 + y*a^2 + x*a + w where z is player coordinate, y - goal and x - pit and w - wall 
+        return int(player_abs * self.grid_size_cube + self.goal * self.grid_size_square + self.pit * self.grid_size + self.wall)
 
+    @classmethod
+    def player_abs_from_state(cls, state):
+        # We need to find z coordinate from state = z*a^3 + y*a^2 + x*a + w
+        return int(state / cls.grid_size_cube)
+        
+    @classmethod
+    def goal_abs_from_state(cls, state):
+        # We need to find y coordinate from state = z*a^3 + y*a^2 + x*a + w
+        return int((state % cls.grid_size_cube) / cls.grid_size_square)
+    
+    @classmethod
+    def pit_abs_from_state(cls, state):
+        # We need to find x coordinate from state = z*a^3 + y*a^2 + x*a + w
+        return int(((state % cls.grid_size_cube) % cls.grid_size_square) / cls.grid_size)
+    
+    @classmethod
+    def wall_abs_from_state(cls, state):
+        # We need to find w coordinate from state = z*a^3 + y*a^2 + x*a + w
+        return int(((state % cls.grid_size_cube) % cls.grid_size_square) % cls.grid_size) 
 

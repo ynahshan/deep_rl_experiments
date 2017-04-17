@@ -420,7 +420,7 @@ np.random.seed(0)
 if __name__ == '__main__':
     # Prepare Agent
     verbosity = 1  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
-    env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.RandomPlayerGoalAndPit)
+    env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.AllRandom)
     env = env_factory.create_environment()
 
     if verbosity >= 1:
@@ -434,9 +434,9 @@ if __name__ == '__main__':
     total_steps = 0
     total_iterations = 0
     async = True
-#     agents = deque([create_agent(), create_agent(), create_agent(), create_agent()])
+    agents = deque([create_agent(), create_agent(), create_agent(), create_agent()])
 #     agents = deque([create_agent(), create_agent()])
-    agents = deque([create_agent()])
+#     agents = deque([create_agent()])
     trainer = MultiAgentTrainer(env_factory)
     while not converged:
         steps = trainer.train(agents, env.num_states, verbosity, async=True)
