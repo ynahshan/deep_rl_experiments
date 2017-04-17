@@ -250,8 +250,7 @@ class Trainer:
         epoch = 0
         for s in mini_batch:
             if verbosity >= 2:
-                print("\nEpoch #%d" % epoch)
-                epoch += 1
+                print("\nEpoch #%d" % s)
             # For each episode create new environment so agent will face different starting positions and object locations.
             env = self.env_factory.create_environment(s)
             if env == None:
@@ -420,8 +419,8 @@ def create_agent():
 np.random.seed(0)
 if __name__ == '__main__':
     # Prepare Agent
-    verbosity = 1  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
-    env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.AllRandom)
+    verbosity = 2  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
+    env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.Deterministic)
     env = env_factory.create_environment()
 
     if verbosity >= 1:
@@ -434,7 +433,7 @@ if __name__ == '__main__':
     rewards = []
     total_steps = 0
     total_iterations = 0
-    async = True
+    async = False
     if async:
         num_agents = int(math.pow(2, int(math.log(cpu_count(), 2))))
         agents = deque([create_agent() for _ in range(num_agents)])
