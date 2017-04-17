@@ -7,8 +7,9 @@ Created on Apr 15, 2017
 import sys
 import timeit
 
+sys.path.append('../')
 import matplotlib.pyplot as plt
-from myRlLearning.grid_world import EnvironmentFactory, REWARD_GOAL, REWARD_HANG, REWARD_PIT
+from grid_world import *
 import numpy as np
 from utils.threading.worker import WorkersGroup
 from collections import deque
