@@ -12,8 +12,7 @@ from myRlLearning.grid_world import EnvironmentFactory, REWARD_GOAL, REWARD_HANG
 import numpy as np
 from utils.threading.worker import WorkersGroup
 from collections import deque
-from multiprocessing import Array
-from symbol import factor
+from multiprocessing import Array, cpu_count
 
 class Action:
     num_actions = 4
@@ -434,9 +433,11 @@ if __name__ == '__main__':
     total_steps = 0
     total_iterations = 0
     async = True
-    agents = deque([create_agent(), create_agent(), create_agent(), create_agent()])
+    if async:
+        agents = deque([create_agent() for _ in range(cpu_count())])
 #     agents = deque([create_agent(), create_agent()])
-#     agents = deque([create_agent()])
+    else:
+        agents = deque([create_agent()])
     trainer = MultiAgentTrainer(env_factory)
     while not converged:
         steps = trainer.train(agents, env.num_states, verbosity, async=True)
