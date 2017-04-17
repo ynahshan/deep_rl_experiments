@@ -14,6 +14,7 @@ import numpy as np
 from utils.threading.worker import WorkersGroup
 from collections import deque
 from multiprocessing import Array, cpu_count
+import math
 
 class Action:
     num_actions = 4
@@ -435,7 +436,8 @@ if __name__ == '__main__':
     total_iterations = 0
     async = True
     if async:
-        agents = deque([create_agent() for _ in range(cpu_count())])
+        num_agents = int(math.pow(2, int(math.log(cpu_count(), 2))))
+        agents = deque([create_agent() for _ in range(num_agents)])
 #     agents = deque([create_agent(), create_agent()])
     else:
         agents = deque([create_agent()])
