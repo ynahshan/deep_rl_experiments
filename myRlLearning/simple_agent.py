@@ -64,7 +64,7 @@ class Agent:
     def take_action(self, env):
         # choose an action based on epsilon-greedy strategy
         r = np.random.rand()
-        eps = self.eps / (self.epoch + 1)
+        eps = float(self.eps) / (self.epoch + 1)
         if r < eps:
             # take a random action
             next_move = np.random.choice(Action.num_actions)
@@ -247,7 +247,6 @@ class Trainer:
             start_time = timeit.default_timer()
             
         states = set()
-        epoch = 0
         for s in mini_batch:
             if verbosity >= 2:
                 print("\nEpoch #%d" % s)
@@ -419,8 +418,8 @@ def create_agent():
 np.random.seed(0)
 if __name__ == '__main__':
     # Prepare Agent
-    verbosity = 2  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
-    env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.Deterministic)
+    verbosity = 1  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
+    env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.AllRandom)
     env = env_factory.create_environment()
 
     if verbosity >= 1:
@@ -433,7 +432,7 @@ if __name__ == '__main__':
     rewards = []
     total_steps = 0
     total_iterations = 0
-    async = False
+    async = True
     if async:
         num_agents = int(math.pow(2, int(math.log(cpu_count(), 2))))
         agents = deque([create_agent() for _ in range(num_agents)])
