@@ -41,7 +41,7 @@ class EnvironmentFactory:
             env = cls.from_state(state)
         return env
 
-class EnvironmentBase:
+class EnvironmentBase(object):
     size = 4
     grid_size = size * size
     grid_size_square = grid_size ** 2

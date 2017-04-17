@@ -443,7 +443,7 @@ if __name__ == '__main__':
         agents = deque([create_agent()])
     trainer = MultiAgentTrainer(env_factory)
     while not converged:
-        steps = trainer.train(agents, env.num_states, verbosity, async=True)
+        steps = trainer.train(agents, env.num_states, verbosity, async=async)
         total_steps += steps
 #         max_reward = -100
         print("Evaluate agents to test convergence")
