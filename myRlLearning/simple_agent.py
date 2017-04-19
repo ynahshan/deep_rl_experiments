@@ -16,25 +16,6 @@ from collections import deque
 from multiprocessing import Array, cpu_count
 import math
 
-class Action:
-    num_actions = 4
-    UP = 0
-    DOWN = 1
-    LEFT = 2
-    RIGHT = 3
-    @staticmethod
-    def to_string(a):
-        if a == Action.UP:
-            return 'UP'
-        elif a == Action.DOWN:
-            return 'DOWN'
-        elif a == Action.LEFT:
-            return 'LEFT'
-        elif a == Action.RIGHT:
-            return 'RIGHT'
-        else:
-            return 'n/a'
-
 class Agent:
     def __init__(self, eps=1, alpha=0.5, verbose=False):
         self.eps = eps  # probability of choosing random action instead of greedy
@@ -418,7 +399,7 @@ np.random.seed(0)
 if __name__ == '__main__':
     # Prepare Agent
     verbosity = 1  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
-    env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.AllRandom)
+    env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.RandomPlayer)
     env = env_factory.create_environment()
 
     if verbosity >= 1:

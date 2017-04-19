@@ -41,6 +41,25 @@ class EnvironmentFactory:
             env = cls.from_state(state)
         return env
 
+class Action:
+    num_actions = 4
+    UP = 0
+    DOWN = 1
+    LEFT = 2
+    RIGHT = 3
+    @staticmethod
+    def to_string(a):
+        if a == Action.UP:
+            return 'UP'
+        elif a == Action.DOWN:
+            return 'DOWN'
+        elif a == Action.LEFT:
+            return 'LEFT'
+        elif a == Action.RIGHT:
+            return 'RIGHT'
+        else:
+            return 'n/a'
+        
 class EnvironmentBase(object):
     size = 4
     grid_size = size * size
@@ -85,7 +104,36 @@ class EnvironmentBase(object):
     def get_state(self, player_loc_cartesian):
         player_abs_pos = int(player_loc_cartesian[0] * self.size + player_loc_cartesian[1])
         return self.player_abs_to_state(player_abs_pos)
-            
+    
+#     def step(self, action):
+#         state = self.state
+#         # up (row - 1)
+#         if action == Action.UP:
+#             new_loc = (self.location[0] - 1, self.location[1])
+#             if (new_loc != self.wall_cartesian):
+#                 if ((np.array(new_loc) <= (3, 3)).all() and (np.array(new_loc) >= (0, 0)).all()):
+#                     state = self.get_state(new_loc)
+#         # down (row + 1)
+#         elif action == Action.DOWN:
+#             new_loc = (self.location[0] + 1, self.location[1])
+#             if (new_loc != self.wall_cartesian):
+#                 if ((np.array(new_loc) <= (3, 3)).all() and (np.array(new_loc) >= (0, 0)).all()):
+#                     state = self.get_state(new_loc)
+#         # left (column - 1)
+#         elif action == Action.LEFT:
+#             new_loc = (self.location[0], self.location[1] - 1)
+#             if (new_loc != self.wall_cartesian):
+#                 if ((np.array(new_loc) <= (3, 3)).all() and (np.array(new_loc) >= (0, 0)).all()):
+#                     state = self.get_state(new_loc)
+#         # right (column + 1)
+#         elif action == Action.RIGHT:
+#             new_loc = (self.location[0], self.location[1] + 1)
+#             if (new_loc != self.wall_cartesian):
+#                 if ((np.array(new_loc) <= (3, 3)).all() and (np.array(new_loc) >= (0, 0)).all()):
+#                     state = self.get_state(new_loc)
+#                     
+#         return (state, reward, done, None)
+       
     def show(self):
         grid = np.zeros((self.size, self.size), dtype='<U2')
 
