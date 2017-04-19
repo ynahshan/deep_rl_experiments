@@ -17,7 +17,7 @@ from multiprocessing import Array, cpu_count
 import math
 
 class Agent:
-    def __init__(self, eps=1, alpha=0.5, verbose=False):
+    def __init__(self, eps=1.0, alpha=0.5, verbose=False):
         self.eps = eps  # probability of choosing random action instead of greedy
         self.alpha = alpha  # learning rate
         self.state_history = []
@@ -25,16 +25,7 @@ class Agent:
         self.epoch = 0
         self.random_actions = 0
         self.greedy_actions = 0
-        pass
-    
-    def copy(self):
-        agent = Agent(self.eps, self.alpha, self.verbose)
-        agent.epoch = self.epoch
-        agent.random_actions = self.random_actions
-        agent.greedy_actions = self.greedy_actions
-        agent.state_history = self.state_history[:]
-        agent.V = self.V.copy()
-        return agent        
+        pass     
     
     def setV(self, V):
         self.V = V
@@ -62,7 +53,7 @@ class Agent:
             best_value = -100
             for a in range(Action.num_actions):
                 # what is the state if we made this move?
-                state = self.imitate_move(env, a)
+                (state, _, _, _) = env.simulate_step(a)
                 # Do not count actions which leave agent in same place to avoid bouncing against the wall. 
                 # In more advanced algorithms may put small negative reward on each step
                 if self.V[state] > best_value and state != env.state:
@@ -72,22 +63,23 @@ class Agent:
             if self.verbose:
                 print ("Taking a greedy action " + Action.to_string(next_move))
         # make the move
-        self.make_move(env, next_move)
-        self.state_history.append(env.state)
+        state, _, _, _ = env.step(next_move)
+#         self.make_move(env, next_move)
+        self.state_history.append(state)
         
         # if verbose, draw the grid
         if self.verbose:
             env.show()
             
     def run(self, env, max_steps=10000):
-        self.reset(env)
+        self.reset()
         actions = []
         steps = 0
         while not env.is_done():
             best_value = -100
             for a in range(Action.num_actions):
                 # what is the state if we made this move?
-                state = self.imitate_move(env, a)
+                (state, _, _, _) = env.simulate_step(a)
                 # Do not count actions which leave agent in same place to avoid bouncing against the wall. 
                 # In more advanced algorithms may put small negative reward on each step
                 if self.V[state] > best_value and state != env.state:
@@ -95,7 +87,7 @@ class Agent:
                     best_value = self.V[state]
                     next_move = a
             # make the move
-            self.make_move(env, next_move)
+            state, _, _, _ = env.step(next_move)
             self.state_history.append(env.state)
             actions.append(Action.to_string(next_move))
             steps += 1
@@ -122,78 +114,18 @@ class Agent:
             
         self.advance_epoch()
         
-    def reset(self, env):
+    def reset(self):
         self.reset_history()
-        self.location = (int(env.player_starting_point / env.size), env.player_starting_point % env.size)
         self.random_actions = 0
         self.greedy_actions = 0
     
     def advance_epoch(self):
         self.epoch += 1
-    
-    def make_move(self, env, action):    
-        # up (row - 1)
-        if action == Action.UP:
-            new_loc = (self.location[0] - 1, self.location[1])
-            if (new_loc != env.wall_cartesian):
-                if ((np.array(new_loc) <= (env.size - 1, env.size - 1)).all() and (np.array(new_loc) >= (0, 0)).all()):
-                    env.update_state(new_loc)
-                    self.location = new_loc
-        # down (row + 1)
-        elif action == Action.DOWN:
-            new_loc = (self.location[0] + 1, self.location[1])
-            if (new_loc != env.wall_cartesian):
-                if ((np.array(new_loc) <= (3, 3)).all() and (np.array(new_loc) >= (0, 0)).all()):
-                    env.update_state(new_loc)
-                    self.location = new_loc
-        # left (column - 1)
-        elif action == Action.LEFT:
-            new_loc = (self.location[0], self.location[1] - 1)
-            if (new_loc != env.wall_cartesian):
-                if ((np.array(new_loc) <= (3, 3)).all() and (np.array(new_loc) >= (0, 0)).all()):
-                    env.update_state(new_loc)
-                    self.location = new_loc
-        # right (column + 1)
-        elif action == Action.RIGHT:
-            new_loc = (self.location[0], self.location[1] + 1)
-            if (new_loc != env.wall_cartesian):
-                if ((np.array(new_loc) <= (3, 3)).all() and (np.array(new_loc) >= (0, 0)).all()):
-                    env.update_state(new_loc)
-                    self.location = new_loc
-    
-    def imitate_move(self, env, action):
-        state = env.state
-        # up (row - 1)
-        if action == Action.UP:
-            new_loc = (self.location[0] - 1, self.location[1])
-            if (new_loc != env.wall_cartesian):
-                if ((np.array(new_loc) <= (3, 3)).all() and (np.array(new_loc) >= (0, 0)).all()):
-                    state = env.get_state(new_loc)
-        # down (row + 1)
-        elif action == Action.DOWN:
-            new_loc = (self.location[0] + 1, self.location[1])
-            if (new_loc != env.wall_cartesian):
-                if ((np.array(new_loc) <= (3, 3)).all() and (np.array(new_loc) >= (0, 0)).all()):
-                    state = env.get_state(new_loc)
-        # left (column - 1)
-        elif action == Action.LEFT:
-            new_loc = (self.location[0], self.location[1] - 1)
-            if (new_loc != env.wall_cartesian):
-                if ((np.array(new_loc) <= (3, 3)).all() and (np.array(new_loc) >= (0, 0)).all()):
-                    state = env.get_state(new_loc)
-        # right (column + 1)
-        elif action == Action.RIGHT:
-            new_loc = (self.location[0], self.location[1] + 1)
-            if (new_loc != env.wall_cartesian):
-                if ((np.array(new_loc) <= (3, 3)).all() and (np.array(new_loc) >= (0, 0)).all()):
-                    state = env.get_state(new_loc)
-        return state
-
 
     def single_episode_train(self, env, verbosity=0):
         start_time = timeit.default_timer()
         # reset agent state history. V table doesn't affected by this operation.
-        self.reset(env)
+        self.reset()
         # add starting point to the history
         self.state_history.append(env.state)
         # if verbose, draw the grid

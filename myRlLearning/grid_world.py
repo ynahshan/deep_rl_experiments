@@ -68,18 +68,27 @@ class EnvironmentBase(object):
     
     def __init__(self, player, goal, pit, wall, state):
         # Assume that all parameters are valid
-        self.player_starting_point = player
+        self.player = player
+        self.player_cartesian = EnvironmentBase.abs_to_cartesian(player)
         self.goal = goal
-        self.goal_cartesian = (int(self.goal / self.size), int(self.goal % self.size))
+        self.goal_cartesian = EnvironmentBase.abs_to_cartesian(goal)
         self.pit = pit
-        self.pit_cartesian = (int(self.pit / self.size), int(self.pit % self.size))
+        self.pit_cartesian = EnvironmentBase.abs_to_cartesian(pit)
         self.wall = wall
-        self.wall_cartesian = (int(self.wall / self.size), int(self.wall % self.size))
+        self.wall_cartesian = EnvironmentBase.abs_to_cartesian(wall)
         self.state = state
     
     def __str__(self):
-        return "state %d, player %d, goal %d, pit %d, wall %d" % (self.state, self.player_starting_point, self.goal, self.pit, self.wall)
-      
+        return "state %d, player %d, goal %d, pit %d, wall %d" % (self.state, self.player, self.goal, self.pit, self.wall)
+    
+    @classmethod
+    def abs_to_cartesian(cls, abs_position):
+        return (int(abs_position / cls.size), int(abs_position % cls.size))
+    
+    @classmethod
+    def cartesian_to_abs(cls, cartesian_pos):
+        return int(cartesian_pos[0] * cls.size + cartesian_pos[1])
+    
     def reward(self):
         player_pos = self.player_abs_from_state(self.state)
         if player_pos == self.pit:
@@ -87,52 +96,50 @@ class EnvironmentBase(object):
         elif player_pos == self.goal:
             return 10
         else:
-            return -100
+            return -1
         
     def is_done(self):
         player_pos = self.player_abs_from_state(self.state)
         return player_pos == self.pit or player_pos == self.goal
     
-    def player_cartesian(self):
-        player_abs_pos = self.player_abs_from_state(self.state)
-        return (int(player_abs_pos / self.size), player_abs_pos % self.size)
+    def step(self, action):
+        # up (row - 1)
+        if action == Action.UP:
+            new_loc = (self.player_cartesian[0] - 1, self.player_cartesian[1])
+        # down (row + 1)
+        elif action == Action.DOWN:
+            new_loc = (self.player_cartesian[0] + 1, self.player_cartesian[1])
+        # left (column - 1)
+        elif action == Action.LEFT:
+            new_loc = (self.player_cartesian[0], self.player_cartesian[1] - 1)
+        # right (column + 1)
+        elif action == Action.RIGHT:
+            new_loc = (self.player_cartesian[0], self.player_cartesian[1] + 1)
+
+        if (new_loc != self.wall_cartesian):
+            if ((np.array(new_loc) <= (3, 3)).all() and (np.array(new_loc) >= (0, 0)).all()):
+                self.player_cartesian = new_loc
+                self.player = EnvironmentBase.cartesian_to_abs(new_loc)
+                self.state = self.player_abs_to_state(self.player)
+                                     
+        return (self.state, self.reward(), self.is_done(), None)
     
-    def update_state(self, player_loc_cartesian):
-        player_abs_pos = int(player_loc_cartesian[0] * self.size + player_loc_cartesian[1])
-        self.state = self.player_abs_to_state(player_abs_pos)
+    '''
+    This is cheat function for basic agent RL algorithms which require kind of God mode
+    '''
+    def simulate_step(self, action):
+        cur_state = self.state
+        cur_player = self.player
+        cur_player_cart = self.player_cartesian
         
-    def get_state(self, player_loc_cartesian):
-        player_abs_pos = int(player_loc_cartesian[0] * self.size + player_loc_cartesian[1])
-        return self.player_abs_to_state(player_abs_pos)
-    
-#     def step(self, action):
-#         state = self.state
-#         # up (row - 1)
-#         if action == Action.UP:
-#             new_loc = (self.location[0] - 1, self.location[1])
-#             if (new_loc != self.wall_cartesian):
-#                 if ((np.array(new_loc) <= (3, 3)).all() and (np.array(new_loc) >= (0, 0)).all()):
-#                     state = self.get_state(new_loc)
-#         # down (row + 1)
-#         elif action == Action.DOWN:
-#             new_loc = (self.location[0] + 1, self.location[1])
-#             if (new_loc != self.wall_cartesian):
-#                 if ((np.array(new_loc) <= (3, 3)).all() and (np.array(new_loc) >= (0, 0)).all()):
-#                     state = self.get_state(new_loc)
-#         # left (column - 1)
-#         elif action == Action.LEFT:
-#             new_loc = (self.location[0], self.location[1] - 1)
-#             if (new_loc != self.wall_cartesian):
-#                 if ((np.array(new_loc) <= (3, 3)).all() and (np.array(new_loc) >= (0, 0)).all()):
-#                     state = self.get_state(new_loc)
-#         # right (column + 1)
-#         elif action == Action.RIGHT:
-#             new_loc = (self.location[0], self.location[1] + 1)
-#             if (new_loc != self.wall_cartesian):
-#                 if ((np.array(new_loc) <= (3, 3)).all() and (np.array(new_loc) >= (0, 0)).all()):
-#                     state = self.get_state(new_loc)
-#                     
-#         return (state, reward, done, None)
+        res = self.step(action)
+        
+        # Undo step
+        self.state = cur_state
+        self.player = cur_player
+        self.player_cartesian = cur_player_cart
+                                     
+        return res
        
     def show(self):
         grid = np.zeros((self.size, self.size), dtype='<U2')
@@ -142,7 +149,7 @@ class EnvironmentBase(object):
                 grid[i, j] = ' '
     
 
-        grid[self.player_cartesian()] = 'P'  # player starting point
+        grid[self.player_cartesian] = 'P'  # player starting point
         grid[self.wall_cartesian] = 'W'  # wall
         grid[self.goal_cartesian] = '+'  # goal
         grid[self.pit_cartesian] = '-'  # pit
@@ -169,7 +176,8 @@ class DeterministicEnvironment(EnvironmentBase):
         if state != None:
             super(DeterministicEnvironment, self).__init__(player, goal, pit, wall, state)
         else:
-            self.player_starting_point = 0
+            self.player = 0
+            self.player_cartesian = EnvironmentBase.abs_to_cartesian(self.player)
             self.wall = 10
             self.wall_cartesian = (2, 2)
             self.goal = 15
@@ -177,7 +185,7 @@ class DeterministicEnvironment(EnvironmentBase):
             self.pit = 5
             self.pit_cartesian = (1, 1)
             
-            self.state = self.player_abs_to_state(self.player_starting_point)
+            self.state = self.player_abs_to_state(self.player)
     
     def player_abs_to_state(self, player_abs):
         # In this environment everything initialized deterministically. Player can change position so it's location represent the state of the world.
@@ -218,11 +226,11 @@ class RandomPlayerEnvironment(DeterministicEnvironment):
             self.pit_cartesian = (1, 1)
             
             # Initialize player random location
-            self.player_starting_point = np.random.choice(self.grid_size)
-            while self.player_starting_point in [self.wall, self.pit, self.goal]:
-                self.player_starting_point = np.random.choice(self.grid_size)
-            
-            self.state = self.player_abs_to_state(self.player_starting_point)
+            self.player = np.random.choice(self.grid_size)
+            while self.player in [self.wall, self.pit, self.goal]:
+                self.player = np.random.choice(self.grid_size)
+            self.player_cartesian = EnvironmentBase.abs_to_cartesian(self.player)
+            self.state = self.player_abs_to_state(self.player)
 
 class RandomGoalAndPlayerEnvironment(EnvironmentBase):
     def __init__(self, player=None, goal=None, pit=None, wall=None, state=None):
@@ -242,11 +250,11 @@ class RandomGoalAndPlayerEnvironment(EnvironmentBase):
             self.goal_cartesian = (int(self.goal / self.size), int(self.goal % self.size))
             
             # Initialize player random location
-            self.player_starting_point = np.random.choice(self.grid_size)
-            while self.player_starting_point in [self.wall, self.pit, self.goal]:
-                self.player_starting_point = np.random.choice(self.grid_size)
-    
-            self.state = self.player_abs_to_state(self.player_starting_point)
+            self.player = np.random.choice(self.grid_size)
+            while self.player in [self.wall, self.pit, self.goal]:
+                self.player = np.random.choice(self.grid_size)
+            self.player_cartesian = EnvironmentBase.abs_to_cartesian(self.player)
+            self.state = self.player_abs_to_state(self.player)
     
     def player_abs_to_state(self, player_abs):
         # We represent state as linear combination of (player and goal) were coordinates are (y,x) accordingly
@@ -295,11 +303,11 @@ class RandomGoalPlayerAndPitEnvironment(EnvironmentBase):
             self.goal_cartesian = (int(self.goal / self.size), int(self.goal % self.size))
     
             # Initialize player random location
-            self.player_starting_point = np.random.choice(self.grid_size)
-            while self.player_starting_point in [self.wall, self.pit, self.goal]:
-                self.player_starting_point = np.random.choice(self.grid_size)
-    
-            self.state = self.player_abs_to_state(self.player_starting_point)
+            self.player = np.random.choice(self.grid_size)
+            while self.player in [self.wall, self.pit, self.goal]:
+                self.player = np.random.choice(self.grid_size)
+            self.player_cartesian = EnvironmentBase.abs_to_cartesian(self.player)
+            self.state = self.player_abs_to_state(self.player)
     
     def player_abs_to_state(self, player_abs):
         # We represent state as linear combination of (player, goal and pit) were coordinates are (z,y,x) accordingly
@@ -350,11 +358,11 @@ class FullyRandomEnvironment(EnvironmentBase):
             self.goal_cartesian = (int(self.goal / self.size), int(self.goal % self.size))
     
             # Initialize player random location
-            self.player_starting_point = np.random.choice(self.grid_size)
-            while self.player_starting_point in [self.wall, self.pit, self.goal]:
-                self.player_starting_point = np.random.choice(self.grid_size)
-    
-            self.state = self.player_abs_to_state(self.player_starting_point)
+            self.player = np.random.choice(self.grid_size)
+            while self.player in [self.wall, self.pit, self.goal]:
+                self.player = np.random.choice(self.grid_size)
+            self.player_cartesian = EnvironmentBase.abs_to_cartesian(self.player)
+            self.state = self.player_abs_to_state(self.player)
     
     def player_abs_to_state(self, player_abs):
         # We represent state as linear combination of (player, goal, pit and wall) were coordinates are (z,y,x,w) accordingly
