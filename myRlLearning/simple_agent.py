@@ -15,205 +15,7 @@ from utils.threading.worker import WorkersGroup
 from collections import deque
 from multiprocessing import Array, cpu_count
 import math
-
-class Agent:
-    def __init__(self, eps=1.0, alpha=0.5, verbose=False):
-        self.eps = eps  # probability of choosing random action instead of greedy
-        self.alpha = alpha  # learning rate
-        self.state_history = []
-        self.verbose = verbose
-        self.epoch = 0
-        self.random_actions = 0
-        self.greedy_actions = 0
-        pass     
-    
-    def setV(self, V):
-        self.V = V
-    
-    def reset_history(self):
-        self.state_history = []
-        
-    def take_action(self, env):
-        # choose an action based on epsilon-greedy strategy
-        r = np.random.rand()
-        eps = float(self.eps) / (self.epoch + 1)
-        if r < eps:
-            # take a random action
-            next_move = np.random.choice(Action.num_actions)
-            self.random_actions += 1
-            if self.verbose:
-                print("Taking a random action " + Action.to_string(next_move))
-                print("epsilog: %r < %f" % (r, eps))
-        else:
-            # choose the best action based on current values of states
-            # loop through all possible moves, get their values
-            # keep track of the best value
-            self.greedy_actions += 1
-            next_move = None
-            best_value = -100
-            for a in range(Action.num_actions):
-                # what is the state if we made this move?
-                (state, _, _, _) = env.simulate_step(a)
-                # Do not count actions which leave agent in same place to avoid bouncing against the wall. 
-                # In more advanced algorithms may put small negative reward on each step
-                if self.V[state] > best_value and state != env.state:
-#                 if self.V[state] > best_value:
-                    best_value = self.V[state]
-                    next_move = a
-            if self.verbose:
-                print ("Taking a greedy action " + Action.to_string(next_move))
-        # make the move
-        state, _, _, _ = env.step(next_move)
-#         self.make_move(env, next_move)
-        self.state_history.append(state)
-        
-        # if verbose, draw the grid
-        if self.verbose:
-            env.show()
-            
-    def run(self, env, max_steps=10000):
-        self.reset()
-        actions = []
-        steps = 0
-        while not env.is_done():
-            best_value = -100
-            for a in range(Action.num_actions):
-                # what is the state if we made this move?
-                (state, _, _, _) = env.simulate_step(a)
-                # Do not count actions which leave agent in same place to avoid bouncing against the wall. 
-                # In more advanced algorithms may put small negative reward on each step
-                if self.V[state] > best_value and state != env.state:
-#                 if self.V[state] > best_value:
-                    best_value = self.V[state]
-                    next_move = a
-            # make the move
-            state, _, _, _ = env.step(next_move)
-            self.state_history.append(env.state)
-            actions.append(Action.to_string(next_move))
-            steps += 1
-            if steps > max_steps:
-                break
-            
-        return actions
-    
-    def update(self, env):
-        # we want to BACKTRACK over the states, so that:
-        # V(prev_state) = V(prev_state) + alpha*(V(next_state) - V(prev_state))
-        # where V(next_state) = reward if it's the most current state
-        #
-        # NOTE: we ONLY do this at the end of an episode
-        # not so for all the algorithms we will study
-        reward = env.reward()
-        target = reward
-#         print(self.state_history)
-        self.V[self.state_history.pop()] = target
-        for prev in reversed(self.state_history):
-            value = self.V[prev] + self.alpha * (target - self.V[prev])
-            self.V[prev] = value
-            target = value
-            
-        self.advance_epoch()
-        
-    def reset(self):
-        self.reset_history()
-        self.random_actions = 0
-        self.greedy_actions = 0
-    
-    def advance_epoch(self):
-        self.epoch += 1
-
-    def single_episode_train(self, env, verbosity=0):
-        start_time = timeit.default_timer()
-        # reset agent state history. V table doesn't affected by this operation.
-        self.reset()
-        # add starting point to the history
-        self.state_history.append(env.state)
-        # if verbose, draw the grid
-        if verbosity >= 3:
-            env.show()
-        # loops until grid is solved
-        steps = 0
-        while not env.is_done():
-            # current player makes a move
-            self.take_action(env)
-            steps += 1
-            # Increase epsilon as workaround to stacking in infinite actions chain
-            if steps > env.grid_size * 2 and self.epoch > 1:
-                self.epoch /= 2
-        # do the value function update
-        self.update(env)
-        elapsed = timeit.default_timer() - start_time
-        if verbosity >= 2:
-            print("Solved in %d steps" % len(self.state_history))
-            print("Time to solve grid %.3f[ms]" % (elapsed * 1000))
-            print("Random actions %d, greedy actions %d" % (self.random_actions, self.greedy_actions))
-
-
-class Trainer:
-    def __init__(self, env_factory):
-        self.env_factory = env_factory
-        
-    def train(self, agent, mini_batch, verbosity=0):
-        steps = 0
-        if verbosity >= 1:
-            print("Train agent for %d iterations." % len(mini_batch))
-            start_time = timeit.default_timer()
-            
-        states = set()
-        for s in mini_batch:
-            if verbosity >= 3:
-                print("\nEpoch #%d" % s)
-            # For each episode create new environment so agent will face different starting positions and object locations.
-            env = self.env_factory.create_environment(s)
-            if env == None:
-                continue
-            agent.single_episode_train(env, verbosity)
-            steps += len(agent.state_history)
-            states.update(agent.state_history)      
-            if verbosity >= 2:
-                print("Episode reward: %f" % env.reward())
-        
-        elapsed = timeit.default_timer() - start_time
-
-        if verbosity >= 1:
-            print("Training time %.3f[ms]" % (elapsed * 1000))
-        if verbosity == 0:
-            print(" %d" % steps)
-        return steps, list(states)
-
-    def evaluate(self, agent, mini_batch, verbosity=0):
-        if verbosity >= 2:
-            print("Evaluating agent for %d iterations." % len(mini_batch))
-            start_time = timeit.default_timer()
-        rewards = np.empty(len(mini_batch))
-        rewards[:] = np.NaN
-        num_iterations = len(mini_batch)
-        for i in range(num_iterations):
-            env = self.env_factory.create_environment(mini_batch[i])
-            if env != None:
-                if verbosity >= 3:
-                    print()
-                    env.show()
-                path = agent.run(env, max_steps=env.grid_size)
-                
-                if verbosity >= 3 or (verbosity >= 2 and env.reward() == REWARD_PIT):
-                    print("Failed environment:")
-                    env_factory.create_environment(mini_batch[i]).show()
-                    print("Agent path")
-                    print(path)
-                    print("Reward: %.1f" % env.reward())
-                rewards[i] = env.reward()
-        
-        if verbosity >= 1:
-            print("Valid states checked %d from total %d" % (num_iterations - len(rewards[np.isnan(rewards)]), num_iterations))
-            success = rewards[rewards == REWARD_GOAL].size
-            fail = rewards[rewards == REWARD_PIT].size
-            hang = rewards[rewards == REWARD_HANG].size
-            print("%d ended at goal, %d at pit, %d hanged." % (success, fail, hang))
-        if verbosity >= 2:
-            elapsed = timeit.default_timer() - start_time
-            print("Evaluation time %.3f[ms]" % (elapsed * 1000))
-        return np.nanmean(rewards)
+from simple_value_table_agent import SimpleValueTableAgent
 
 class MultiAgentTrainer:
     def __init__(self, env_factory, factor=1, factor_mult=10):
@@ -222,12 +24,10 @@ class MultiAgentTrainer:
         self.factor_mult = factor_mult
     
     @staticmethod
-    def train_async(agent, env_factory, it_per_agent, i, out_vtable, out_states, verbosity):
+    def train_async(agent, env_factory, it_per_agent, i, out_vtable, verbosity):
         start = timeit.default_timer();
         mini_batch = range(i * it_per_agent, ((i + 1) * it_per_agent))
-        trainer = Trainer(env_factory)
-        stps, states = trainer.train(agent, mini_batch, verbosity)
-        out_states[:len(states)] = states[:] 
+        stps = agent.train(agent, mini_batch, verbosity) 
         out_vtable[:] = agent.V[:]
         if verbosity >= 1:
             print("trainer%d end %.3f[ms]" % (i, ((timeit.default_timer() - start) * 1000)))
@@ -250,7 +50,7 @@ class MultiAgentTrainer:
             out_v = [Array('d', np.empty(a.V.size)) for a in agents]
             out_states = [Array('i', [-1] * a.V.size) for a in agents]
             for i in range(len(agents)):
-                args_list.append((agents[i], env_factory, it_per_agent, i, out_v[i], out_states[i], verbosity))
+                args_list.append((agents[i], env_factory, it_per_agent, i, out_v[i], verbosity))
             wg = WorkersGroup(len(agents), target=MultiAgentTrainer.train_async, args_list=args_list)
             res = wg.run()
             if verbosity >= 1:
@@ -260,12 +60,11 @@ class MultiAgentTrainer:
                 agents[i].setV(np.array(out_v[i]))
                 temp = np.array(out_states[i])
                 states_per_agent.append(temp[temp >= 0])
-        else:                   
-            trainer = Trainer(self.env_factory)    
+        else: 
             for i in range(len(agents)):
                 mini_batch = range(i * it_per_agent, ((i + 1) * it_per_agent))
-                stps, states = trainer.train(agents[i], mini_batch, verbosity)
-                states_per_agent.append(np.array(states))
+                stps = agents[i].train(mini_batch, verbosity)
+#                 states_per_agent.append(np.array(states))
                 steps += stps
         
         if verbosity >= 1:
@@ -288,9 +87,8 @@ class MultiAgentTrainer:
 
     @staticmethod
     def evaluate_async(agent, env_factory, it_per_agent, i, verbosity):
-        trainer = Trainer(env_factory)
         mini_batch = range(i * it_per_agent, ((i + 1) * it_per_agent))
-        reward = trainer.evaluate(agent, mini_batch, verbosity)
+        reward = agent.evaluate(agent, mini_batch, verbosity)
         return reward
 
     def evaluate(self, agents, num_iterations, verbosity=0, async=False):        
@@ -309,10 +107,9 @@ class MultiAgentTrainer:
             res = wg.run()
             rewards[:] = res[:]
         else:
-            trainer = Trainer(self.env_factory)
             for i in range(len(agents)):
                 mini_batch = range(i * it_per_agent, ((i + 1) * it_per_agent))
-                reward = trainer.evaluate(agents[i], mini_batch, verbosity)
+                reward = agents[i].evaluate(mini_batch, verbosity)
                 rewards[i] = reward
         
         elapsed = timeit.default_timer() - start_time
@@ -321,17 +118,19 @@ class MultiAgentTrainer:
         return rewards
 
 
-def create_agent(verbosity):
-    agent = Agent(verbose=(verbosity >= 3))
+def create_agent(env_factory, verbosity):
+    agent = SimpleValueTableAgent(verbose=(verbosity >= 3))
     V = np.zeros(env.num_states)
     agent.setV(V)
-    return agent
+    
+    gda = GridWorldSolver(env_factory, agent)
+    return gda
 
 np.random.seed(0)
 if __name__ == '__main__':
     # Prepare Agent
     verbosity = 1  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
-    env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.RandomPlayer)
+    env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.RandomPlayerAndGoal)
     env = env_factory.create_environment()
 
     if verbosity >= 1:
@@ -347,10 +146,10 @@ if __name__ == '__main__':
     async = False
     if async:
         num_agents = int(math.pow(2, int(math.log(cpu_count(), 2))))
-        agents = deque([create_agent(verbosity) for _ in range(num_agents)])
+        agents = deque([create_agent(env_factory, verbosity) for _ in range(num_agents)])
 #     agents = deque([create_agent(), create_agent()])
     else:
-        agents = deque([create_agent(verbosity)])
+        agents = deque([create_agent(env_factory, verbosity)])
     trainer = MultiAgentTrainer(env_factory)
     while not converged:
         steps = trainer.train(agents, env.num_states, verbosity, async=async)

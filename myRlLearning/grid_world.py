@@ -5,6 +5,7 @@ Created on Mar 13, 2017
 '''
 
 import numpy as np
+import timeit
 
 REWARD_GOAL = 10
 REWARD_PIT = -10
@@ -48,15 +49,15 @@ class Action:
     LEFT = 2
     RIGHT = 3
     @staticmethod
-    def to_string(a):
+    def to_string(a, first_latter=False):
         if a == Action.UP:
-            return 'UP'
+            return 'U' if first_latter else 'UP'
         elif a == Action.DOWN:
-            return 'DOWN'
+            return 'D' if first_latter else 'DOWN'
         elif a == Action.LEFT:
-            return 'LEFT'
+            return 'L' if first_latter else 'LEFT'
         elif a == Action.RIGHT:
-            return 'RIGHT'
+            return 'R' if first_latter else 'RIGHT'
         else:
             return 'n/a'
         
@@ -65,6 +66,7 @@ class EnvironmentBase(object):
     grid_size = size * size
     grid_size_square = grid_size ** 2
     grid_size_cube = grid_size ** 3
+    __all_actions = [Action.UP, Action.DOWN, Action.LEFT, Action.RIGHT]
     
     def __init__(self, player, goal, pit, wall, state):
         # Assume that all parameters are valid
@@ -80,6 +82,12 @@ class EnvironmentBase(object):
     
     def __str__(self):
         return "state %d, player %d, goal %d, pit %d, wall %d" % (self.state, self.player, self.goal, self.pit, self.wall)
+    
+    def all_actions(self):
+        return self.__all_actions
+    
+    def action_to_str(self, action):
+        return Action.to_string(action)
     
     @classmethod
     def abs_to_cartesian(cls, abs_position):
@@ -142,19 +150,24 @@ class EnvironmentBase(object):
         return res
        
     def show(self):
-        grid = np.zeros((self.size, self.size), dtype='<U2')
-
-        for i in range(0, self.size):
-            for j in range(0, self.size):
-                grid[i, j] = ' '
-    
-
-        grid[self.player_cartesian] = 'P'  # player starting point
-        grid[self.wall_cartesian] = 'W'  # wall
-        grid[self.goal_cartesian] = '+'  # goal
-        grid[self.pit_cartesian] = '-'  # pit
-    
-        print(grid)
+        print("** Grid world **")
+        for i in range(self.size):
+            print("----------------")
+            for j in range(self.size):
+                abs_pos = self.cartesian_to_abs((i, j))
+                if abs_pos == self.wall:
+                    symbol = '#'
+                elif abs_pos == self.goal:
+                    symbol = '+'
+                elif abs_pos == self.pit:
+                    symbol = '-'
+                elif abs_pos == self.player:  
+                    symbol = 'P'
+                else:
+                    symbol = ' '
+                print((" %s |" % symbol), end='')
+            print()
+        print()
         
     @classmethod
     def from_state(cls, state):
@@ -389,3 +402,76 @@ class FullyRandomEnvironment(EnvironmentBase):
         # We need to find w coordinate from state = z*a^3 + y*a^2 + x*a + w
         return int(((state % cls.grid_size_cube) % cls.grid_size_square) % cls.grid_size) 
 
+
+class GridWorldSolver:
+    def __init__(self, env_factory, agent):
+        self.env_factory = env_factory
+        self.agent = agent
+    
+    def train(self, states, verbosity=0):
+        if verbosity >= 1:
+            print("Train agent for %d iterations." % len(states))
+            start_time = timeit.default_timer()
+        
+        steps = self.agent.single_iteration_train(self.env_factory, states, verbosity)
+        
+        elapsed = timeit.default_timer() - start_time
+
+        if verbosity >= 1:
+            print("Training time %.3f[ms]" % (elapsed * 1000))
+        if verbosity == 0:
+            print(" %d" % steps)
+        return steps
+    
+    def solve_world(self, env, max_steps=10000):
+        self.agent.reset()
+        actions = []
+        steps = 0
+        done = False
+        while not done:
+            next_move = self.agent.optimal_action(env)
+            # make the move
+            _, _, done, _ = env.step(next_move)
+            actions.append(Action.to_string(next_move))
+            steps += 1
+            if steps > max_steps:
+                break
+            
+        return actions
+    
+    def evaluate(self, states, verbosity=0):
+        if verbosity >= 2:
+            print("Evaluating agent for %d iterations." % len(states))
+            start_time = timeit.default_timer()
+        rewards = np.empty(len(states))
+        rewards[:] = np.NaN
+        num_iterations = len(states)
+        for i in range(num_iterations):
+            env = self.env_factory.create_environment(states[i])
+            if env == None:
+                continue
+            
+            if verbosity >= 3:
+                print()
+                env.show()
+                
+            path = self.solve_world(env, max_steps=env.grid_size)
+            
+            if verbosity >= 3 or (verbosity >= 2 and env.reward() == REWARD_PIT):
+                print("Failed environment:")
+                self.env_factory.create_environment(states[i]).show()
+                print("Agent path")
+                print(path)
+                print("Reward: %.1f" % env.reward())
+            rewards[i] = env.reward()
+        
+        if verbosity >= 1:
+            print("Valid states checked %d from total %d" % (num_iterations - len(rewards[np.isnan(rewards)]), num_iterations))
+            success = rewards[rewards == REWARD_GOAL].size
+            fail = rewards[rewards == REWARD_PIT].size
+            hang = rewards[rewards == REWARD_HANG].size
+            print("%d ended at goal, %d at pit, %d hanged." % (success, fail, hang))
+        if verbosity >= 2:
+            elapsed = timeit.default_timer() - start_time
+            print("Evaluation time %.3f[ms]" % (elapsed * 1000))
+        return np.nanmean(rewards)
