@@ -21,7 +21,7 @@ class PolicyIterationAgent:
     '''
     def single_iteration_train(self, env_factory, states, verbosity=0):
         if verbosity >= 1:
-            print("Updating Value function.")
+            print("Updating Value function. Policy improvement.")
         for s in states:
             if s % 1000 == 0 and verbosity <= 1:
                 sys.stdout.write('.')
@@ -39,7 +39,7 @@ class PolicyIterationAgent:
 
         print()
         if verbosity >= 1:
-            print("Improving policy.")
+            print("Policy evaluation")
         for s in states:
             if s % 1000 == 0 and verbosity <= 1:
                 sys.stdout.write('.')

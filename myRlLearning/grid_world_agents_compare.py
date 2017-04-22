@@ -10,7 +10,7 @@ import numpy as np
 
 from grid_world import GridWorldSolver, EnvironmentFactory, REWARD_GOAL
 from simple_value_table_agent import SimpleValueTableAgent
-from policy_iteration import PolicyIterationAgent
+from policy_iteration_agent import PolicyIterationAgent
 
 agents = ["simple", "policy_it"]
 
@@ -26,9 +26,10 @@ np.random.seed(0)
 if __name__ == '__main__':
     # Prepare Agent
     verbosity = 1  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
-    env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.AllRandom)
+    env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.RandomPlayerAndGoal)
     env = env_factory.create_environment()
-    agent = create_agent(env, "policy_it")
+    agents = ["simple", "policy_it"]
+    agent = create_agent(env, agents[1])
     solver = GridWorldSolver(env_factory, agent)
     print("Evaluate %s performance on %s grid world\n" % (agent.__class__.__name__, env.__class__.__name__))
     if verbosity >= 1:
