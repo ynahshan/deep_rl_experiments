@@ -9,15 +9,71 @@ import timeit
 from grid_world import *
 import numpy as np
 
-SMALL_ENOUGH = 10e-4  # Threshold for convergence
-GAMMA = 0.9
-
 
 class PolicyIterationAgent:
-    pass
+    def __init__(self, num_states, actions, gamma = 0.9):
+        self.gamma = gamma
+        self.V = np.zeros(num_states)
+        self.policy = np.random.choice(actions, num_states)
+        
+    '''
+    Interface method
+    '''
+    def single_iteration_train(self, env_factory, states, verbosity=0):
+        if verbosity >= 1:
+            print("Updating Value function.")
+        for s in states:
+            if s % 1000 == 0 and verbosity <= 1:
+                sys.stdout.write('.')
+                sys.stdout.flush()
+
+            env = env_factory.create_environment(s)
+            # V(s) has only value if it's not a terminal state 
+            if env != None:
+                a = self.policy[s]
+                s_prime, r, _, _ = env.simulate_step(a)
+                self.V[s] = r + self.gamma * self.V[s_prime]
+                if verbosity >= 3:
+                    env.show_values(V)
+            
+
+        print()
+        if verbosity >= 1:
+            print("Improving policy.")
+        for s in states:
+            if s % 1000 == 0 and verbosity <= 1:
+                sys.stdout.write('.')
+                sys.stdout.flush()
+            env = env_factory.create_environment(s)
+            if env != None:
+                best_value = float('-inf')
+                # loop through all possible actions to find the best current action.
+                # It is basically the Q function evaluation for state s.
+                for a in env.all_actions():
+                    s_prime, r, _, _ = env.simulate_step(a)
+                    v = r + self.gamma * self.V[s_prime]
+                    if v > best_value:
+                        best_value = v
+                        best_action = a
+                 
+                self.policy[s] = best_action
+                if verbosity >= 3:
+                    env.show_policy(policy)
+                    
+        print()
+        return len(states)
+
+    '''
+    Interface method
+    '''
+    def optimal_action(self, env):
+        s = env.state
+        return self.policy[s]
 
 np.random.seed(0)
 if __name__ == '__main__':
+    SMALL_ENOUGH = 10e-4  # Threshold for convergence
+    GAMMA = 0.9
     verbosity = 0
     env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.RandomPlayer)
     env = env_factory.create_environment()
@@ -63,7 +119,7 @@ if __name__ == '__main__':
             env = env_factory.create_environment(s)
             if env != None:
                 old_a = policy[s]
-                new_a = None
+                best_action = None
                 best_value = float('-inf')
                 # loop through all possible actions to find the best current action
                 for a in env.all_actions():
@@ -71,12 +127,12 @@ if __name__ == '__main__':
                     v = r + GAMMA * V[s_prime]
                     if v > best_value:
                         best_value = v
-                        new_a = a
+                        best_action = a
                  
-                policy[s] = new_a
+                policy[s] = best_action
                 if verbosity >= 3:
                     env.show_policy(policy)
-                if new_a != old_a:
+                if best_action != old_a:
                     is_policy_converged = False
                      
         if is_policy_converged:

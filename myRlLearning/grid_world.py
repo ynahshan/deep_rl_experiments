@@ -10,7 +10,6 @@ import timeit
 
 REWARD_GOAL = 10
 REWARD_PIT = -10
-REWARD_HANG = -100
 
 class EnvironmentFactory:
     class EnvironmentType:
@@ -461,27 +460,27 @@ class GridWorldSolver:
         return steps
     
     def solve_world(self, env, max_steps=10000):
-        self.agent.reset()
         actions = []
         steps = 0
         done = False
+        total_reward = 0
         while not done:
             next_move = self.agent.optimal_action(env)
             # make the move
-            _, _, done, _ = env.step(next_move)
+            _, r, done, _ = env.step(next_move)
+            total_reward += r
             actions.append(Action.to_string(next_move))
             steps += 1
             if steps > max_steps:
                 break
             
-        return actions
+        return actions, total_reward, r
     
     def evaluate(self, states, verbosity=0):
         if verbosity >= 2:
             print("Evaluating agent for %d iterations." % len(states))
             start_time = timeit.default_timer()
-        rewards = np.empty(len(states))
-        rewards[:] = np.NaN
+        rewards = np.array([np.NAN] * (len(states)))
         num_iterations = len(states)
         for i in range(num_iterations):
             if i % 1000 == 0 and verbosity <= 1:
@@ -495,21 +494,21 @@ class GridWorldSolver:
                 print()
                 env.show()
                 
-            path = self.solve_world(env, max_steps=env.grid_size)
+            path, total_reward, last_action_reward = self.solve_world(env, max_steps=env.grid_size)
             
-            if verbosity >= 3 or (verbosity >= 2 and env.reward() == REWARD_PIT):
+            if verbosity >= 3 or (verbosity >= 2 and last_action_reward == REWARD_PIT):
                 print("Failed environment:")
                 self.env_factory.create_environment(states[i]).show()
                 print("Agent path")
                 print(path)
-                print("Reward: %.1f" % env.reward())
-            rewards[i] = env.reward()
+                print("Reward: %.1f" % total_reward)
+            rewards[i] = last_action_reward
         print()
         if verbosity >= 1:
             print("Valid states checked %d from total %d" % (num_iterations - len(rewards[np.isnan(rewards)]), num_iterations))
             success = rewards[rewards == REWARD_GOAL].size
             fail = rewards[rewards == REWARD_PIT].size
-            hang = rewards[rewards == REWARD_HANG].size
+            hang = rewards[~np.isnan(rewards) & (rewards != REWARD_GOAL) & (rewards != REWARD_PIT)].size
             print("%d ended at goal, %d at pit, %d hanged." % (success, fail, hang))
         if verbosity >= 2:
             elapsed = timeit.default_timer() - start_time

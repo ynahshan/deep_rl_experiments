@@ -10,18 +10,25 @@ import numpy as np
 
 from grid_world import GridWorldSolver, EnvironmentFactory, REWARD_GOAL
 from simple_value_table_agent import SimpleValueTableAgent
+from policy_iteration import PolicyIterationAgent
 
-def create_agent(num_states):
-    agent = SimpleValueTableAgent(num_states)
+agents = ["simple", "policy_it"]
+
+def create_agent(env, agent_type):
+    if agent_type == "simple":
+        agent = SimpleValueTableAgent(env.num_states)
+    elif agent_type == "policy_it":
+        agent = PolicyIterationAgent(env.num_states, env.all_actions())
+        
     return agent    
 
 np.random.seed(0)
 if __name__ == '__main__':
     # Prepare Agent
     verbosity = 1  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
-    env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.RandomPlayerAndGoal)
+    env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.AllRandom)
     env = env_factory.create_environment()
-    agent = create_agent(env.num_states)
+    agent = create_agent(env, "policy_it")
     solver = GridWorldSolver(env_factory, agent)
     print("Evaluate %s performance on %s grid world\n" % (agent.__class__.__name__, env.__class__.__name__))
     if verbosity >= 1:
