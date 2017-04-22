@@ -14,6 +14,8 @@ from policy_iteration_agent import PolicyIterationAgent
 
 agents = ["simple", "policy_it"]
 
+CONVERGENCE_LIMIT = 10e-4
+
 def create_agent(env, agent_type):
     if agent_type == "simple":
         agent = SimpleValueTableAgent(env.num_states)
@@ -26,7 +28,7 @@ np.random.seed(0)
 if __name__ == '__main__':
     # Prepare Agent
     verbosity = 1  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
-    env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.RandomPlayerAndGoal)
+    env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.AllRandom)
     env = env_factory.create_environment()
     agents = ["simple", "policy_it"]
     agent = create_agent(env, agents[1])
@@ -39,6 +41,7 @@ if __name__ == '__main__':
     
     start_time = timeit.default_timer()
 
+    save_model = True
     converged = False
     rewards = []
     total_steps = 0
@@ -53,6 +56,10 @@ if __name__ == '__main__':
         rewards.append(res.mean())
         if res.max() == REWARD_GOAL:
             converged = True
+        if total_iterations > 0:
+            diff = rewards[total_iterations] - rewards[total_iterations - 1]
+            if np.abs(diff) < CONVERGENCE_LIMIT:
+                converged = True 
         
         if verbosity >= 0:
             print()
@@ -65,8 +72,10 @@ if __name__ == '__main__':
     print("Training finished after %d iterations. Total learning steps are %d." % (total_iterations, total_steps))
     print("Total time spent %.3f[s]" % elapsed)
     print("Final mean overal reward %f" % rewards[-1:][0])
-#     print("Saving V table to vtable.bin")
-#     V.tofile('vtable.bin')
+    print("Saving V table to vtable.bin")
+    if save_model:
+        agent.save_model('vtable.bin')
+
     plt.plot(rewards, 'g')
     plt.show()
     print('Done')

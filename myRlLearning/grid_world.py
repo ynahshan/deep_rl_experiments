@@ -496,9 +496,11 @@ class GridWorldSolver:
                 
             path, total_reward, last_action_reward = self.solve_world(env, max_steps=env.grid_size)
             
-            if verbosity >= 3 or (verbosity >= 2 and last_action_reward == REWARD_PIT):
+            if verbosity >= 3 or (verbosity >= 2 and last_action_reward != REWARD_GOAL):
                 print("Failed environment:")
-                self.env_factory.create_environment(states[i]).show()
+                env = self.env_factory.create_environment(states[i])
+                env.show()
+                self.agent.display_functions(env)
                 print("Agent path")
                 print(path)
                 print("Reward: %.1f" % total_reward)

@@ -118,7 +118,12 @@ class SimpleValueTableAgent:
             print("Solved in %d steps" % len(self.state_history))
             print("Time to solve grid %.3f[ms]" % (elapsed * 1000))
             print("Random actions %d, greedy actions %d" % (self.random_actions, self.greedy_actions))
-
+    
+    '''
+    Interface method
+    '''    
+    def save_model(self, file_name):
+        self.V.tofile(file_name)
 
     '''
     Interface method

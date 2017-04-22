@@ -11,11 +11,27 @@ import numpy as np
 
 
 class PolicyIterationAgent:
-    def __init__(self, num_states, actions, gamma = 0.9):
+    def __init__(self, num_states, actions, gamma=0.9):
         self.gamma = gamma
         self.V = np.zeros(num_states)
         self.policy = np.random.choice(actions, num_states)
-        
+
+    def display_functions(self, env):
+        env.show_values(self.V)
+        env.show_policy(self.policy)
+
+    def load_model(self, file_name):
+        model = np.fromfile(file_name)
+        self.V = model.reshape(2, int(model.size / 2))[0]
+        self.policy = model.reshape(2, int(model.size / 2))[1]
+
+    '''
+    Interface method
+    '''    
+    def save_model(self, file_name):
+        model = np.concatenate((self.V.reshape(1, self.V.size), self.policy.reshape(1, self.policy.size)))
+        model.tofile(file_name)
+    
     '''
     Interface method
     '''
