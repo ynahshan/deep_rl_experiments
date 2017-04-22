@@ -4,6 +4,7 @@ Created on Mar 13, 2017
 @author: Yury
 '''
 
+import sys
 import numpy as np
 import timeit
 
@@ -148,7 +149,20 @@ class EnvironmentBase(object):
         self.player_cartesian = cur_player_cart
                                      
         return res
-       
+    
+    @classmethod
+    def from_state(cls, state):
+        player = cls.player_abs_from_state(state)
+        goal = cls.goal_abs_from_state(state)
+        pit = cls.pit_abs_from_state(state)
+        wall = cls.wall_abs_from_state(state)
+        
+        # Check validity
+        if player in [goal, pit, wall] or goal in [pit, wall] or pit in [wall]:
+            return None
+        
+        return cls(player, goal, pit, wall, state)
+    
     def show(self):
         print("** Grid world **")
         for i in range(self.size):
@@ -168,19 +182,43 @@ class EnvironmentBase(object):
                 print((" %s |" % symbol), end='')
             print()
         print()
-        
-    @classmethod
-    def from_state(cls, state):
-        player = cls.player_abs_from_state(state)
-        goal = cls.goal_abs_from_state(state)
-        pit = cls.pit_abs_from_state(state)
-        wall = cls.wall_abs_from_state(state)
-        
-        # Check validity
-        if player in [goal, pit, wall] or goal in [pit, wall] or pit in [wall]:
-            return None
-        
-        return cls(player, goal, pit, wall, state)
+    
+    def show_policy(self, policy):
+        for i in range(self.size):
+            print("----------------")
+            for j in range(self.size):
+                abs_pos = self.cartesian_to_abs((i, j))
+                if abs_pos == self.wall:
+                    symbol = '#'
+                elif abs_pos == self.goal:
+                    symbol = '+'
+                elif abs_pos == self.pit:
+                    symbol = '-'
+                else:  
+                    state = self.player_abs_to_state(abs_pos)
+                    action = policy[state]
+                    symbol = Action.to_string(action, first_latter=True)
+                print((" %s |" % symbol), end='')
+            print("")
+        print("")
+    
+    def show_values(self, V):        
+        for i in range(self.size):
+            print("--------------------------------")
+            for j in range(self.size):
+                abs_pos = self.cartesian_to_abs((i, j))
+                if abs_pos == self.wall:
+                    symbol = '  #  '
+                elif abs_pos == self.goal:
+                    symbol = '  +  '
+                elif abs_pos == self.pit:
+                    symbol = '  -  '
+                else:  
+                    state = self.player_abs_to_state(abs_pos)
+                    symbol = "%.2f" % (V[state])
+                print((" %s |" % symbol), end='')
+            print("")
+        print("")
 
 class DeterministicEnvironment(EnvironmentBase):
     def __init__(self, player=None, goal=None, pit=None, wall=None, state=None):
@@ -414,13 +452,12 @@ class GridWorldSolver:
             start_time = timeit.default_timer()
         
         steps = self.agent.single_iteration_train(self.env_factory, states, verbosity)
-        
-        elapsed = timeit.default_timer() - start_time
 
         if verbosity >= 1:
+            elapsed = timeit.default_timer() - start_time
             print("Training time %.3f[ms]" % (elapsed * 1000))
         if verbosity == 0:
-            print(" %d" % steps)
+            print(" steps: %d" % steps)
         return steps
     
     def solve_world(self, env, max_steps=10000):
@@ -447,6 +484,9 @@ class GridWorldSolver:
         rewards[:] = np.NaN
         num_iterations = len(states)
         for i in range(num_iterations):
+            if i % 1000 == 0 and verbosity <= 1:
+                sys.stdout.write('.')
+                sys.stdout.flush()
             env = self.env_factory.create_environment(states[i])
             if env == None:
                 continue
@@ -464,7 +504,7 @@ class GridWorldSolver:
                 print(path)
                 print("Reward: %.1f" % env.reward())
             rewards[i] = env.reward()
-        
+        print()
         if verbosity >= 1:
             print("Valid states checked %d from total %d" % (num_iterations - len(rewards[np.isnan(rewards)]), num_iterations))
             success = rewards[rewards == REWARD_GOAL].size

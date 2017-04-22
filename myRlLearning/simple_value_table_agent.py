@@ -3,11 +3,13 @@ Created on Apr 21, 2017
 
 @author: Yury
 '''
+
+import sys
 import timeit
 import numpy as np
 
 class SimpleValueTableAgent:
-    def __init__(self, eps=1.0, alpha=0.5, verbose=False):
+    def __init__(self, vtable_size, eps=1.0, alpha=0.5, verbose=False):
         self.eps = eps  # probability of choosing random action instead of greedy
         self.alpha = alpha  # learning rate
         self.state_history = []
@@ -15,10 +17,7 @@ class SimpleValueTableAgent:
         self.epoch = 0
         self.random_actions = 0
         self.greedy_actions = 0
-        pass     
-    
-    def setV(self, V):
-        self.V = V
+        self.V = np.zeros(vtable_size)
     
     def reset_history(self):
         self.state_history = []
@@ -39,17 +38,7 @@ class SimpleValueTableAgent:
             # loop through all possible moves, get their values
             # keep track of the best value
             self.greedy_actions += 1
-            next_move = None
-            best_value = -100
-            for a in env.all_actions():
-                # what is the state if we made this move?
-                (state, _, _, _) = env.simulate_step(a)
-                # Do not count actions which leave agent in same place to avoid bouncing against the wall. 
-                # In more advanced algorithms may put small negative reward on each step
-                if self.V[state] > best_value and state != env.state:
-#                 if self.V[state] > best_value:
-                    best_value = self.V[state]
-                    next_move = a
+            next_move = self.optimal_action(env)
             if self.verbose:
                 print ("Taking a greedy action " + env.action_to_str(next_move))
         # make the move
@@ -60,37 +49,16 @@ class SimpleValueTableAgent:
         # if verbose, draw the grid
         if self.verbose:
             env.show()
-    
-    def optimal_action(self, env):
-        best_value = float('-inf')
-        for a in env.all_actions():
-            # what is the state if we made this move?
-            (state, _, _, _) = env.simulate_step(a)
-            # Do not count actions which leave agent in same place to avoid bouncing against the wall. 
-            # In more advanced algorithms may put small negative reward on each step
-            if self.V[state] > best_value and state != env.state:
-                best_value = self.V[state]
-                next_move = a
-                
-        return next_move
          
     def run(self, env, max_steps=10000):
         self.reset()
         actions = []
         steps = 0
-        while not env.is_done():
-            best_value = -100
-            for a in env.all_actions():
-                # what is the state if we made this move?
-                (state, _, _, _) = env.simulate_step(a)
-                # Do not count actions which leave agent in same place to avoid bouncing against the wall. 
-                # In more advanced algorithms may put small negative reward on each step
-                if self.V[state] > best_value and state != env.state:
-#                 if self.V[state] > best_value:
-                    best_value = self.V[state]
-                    next_move = a
+        done = False
+        while not done:
+            next_move = self.optimal_action(env)
             # make the move
-            state, _, _, _ = env.step(next_move)
+            _, _, done, _ = env.step(next_move)
             self.state_history.append(env.state)
             actions.append(env.action_to_str(next_move))
             steps += 1
@@ -151,9 +119,16 @@ class SimpleValueTableAgent:
             print("Time to solve grid %.3f[ms]" % (elapsed * 1000))
             print("Random actions %d, greedy actions %d" % (self.random_actions, self.greedy_actions))
 
-    def single_iteration_train(self, env_factory, states, verbosity):
+
+    '''
+    Interface method
+    '''
+    def single_iteration_train(self, env_factory, states, verbosity=0):
         steps = 0
         for s in states:
+            if s % 1000 == 0 and verbosity <= 1:
+                sys.stdout.write('.')
+                sys.stdout.flush()
             if verbosity >= 3:
                 print("\nEpoch #%d" % s)
             # For each episode create new environment so agent will face different starting positions and object locations.
@@ -166,5 +141,21 @@ class SimpleValueTableAgent:
       
             if verbosity >= 2:
                 print("Episode reward: %f" % env.reward())
-                
+        print()
         return steps
+
+    '''
+    Interface method
+    '''
+    def optimal_action(self, env):
+        best_value = float('-inf')
+        for a in env.all_actions():
+            # what is the state if we made this move?
+            (state, _, _, _) = env.simulate_step(a)
+            # Do not count actions which leave agent in same place to avoid bouncing against the wall. 
+            # In more advanced algorithms may put small negative reward on each step
+            if self.V[state] > best_value and state != env.state:
+                best_value = self.V[state]
+                next_move = a
+                
+        return next_move
