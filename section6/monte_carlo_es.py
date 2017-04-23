@@ -28,12 +28,13 @@ def play_game(grid, policy):
     # be aware of the timing
     # each triple is s(t), a(t), r(t)
     # but r(t) results from taking action a(t-1) from s(t-1) and landing in s(t)
+    visited_states = set()
     states_actions_rewards = [(s, a, 0)]
     while True:
         old_s = grid.current_state()
         r = grid.move(a)
         s = grid.current_state()
-        if old_s == s:
+        if old_s == s or s in visited_states:
             # hack so that we don't end up in an infinitely long episode
             # bumping into the wall repeatedly
             states_actions_rewards.append((s, None, -100))
@@ -44,6 +45,8 @@ def play_game(grid, policy):
         else:
             a = policy[s]
             states_actions_rewards.append((s, a, r))
+            
+        visited_states.add(s)
 
     # calculate the returns by working backwards from the terminal state
     G = 0
@@ -109,7 +112,7 @@ if __name__ == '__main__':
     # repeat until convergence
     deltas = []
     for t in range(2000):
-        if t % 10 == 0:
+        if t % 1000 == 0:
             print (t)
 
         # generate an episode using pi
@@ -140,7 +143,7 @@ if __name__ == '__main__':
 
     # find V
     V = {}
-    for s, Qs in Q.iteritems():
+    for s, Qs in Q.items():
         V[s] = max_dict(Q[s])[1]
 
     print ("final values:")
