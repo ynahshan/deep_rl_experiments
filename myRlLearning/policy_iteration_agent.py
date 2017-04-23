@@ -10,7 +10,7 @@ from grid_world import *
 import numpy as np
 
 
-class PolicyIterationAgent:
+class PolicyIterationAgent(object):
     def __init__(self, num_states, actions, gamma=0.9):
         self.gamma = gamma
         self.V = np.zeros(num_states)

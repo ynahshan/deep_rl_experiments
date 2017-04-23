@@ -8,7 +8,7 @@ import sys
 import timeit
 import numpy as np
 
-class SimpleValueTableAgent:
+class SimpleValueTableAgent(object):
     def __init__(self, vtable_size, eps=1.0, alpha=0.5, verbose=False):
         self.eps = eps  # probability of choosing random action instead of greedy
         self.alpha = alpha  # learning rate
@@ -49,23 +49,6 @@ class SimpleValueTableAgent:
         # if verbose, draw the grid
         if self.verbose:
             env.show()
-         
-    def run(self, env, max_steps=10000):
-        self.reset()
-        actions = []
-        steps = 0
-        done = False
-        while not done:
-            next_move = self.optimal_action(env)
-            # make the move
-            _, _, done, _ = env.step(next_move)
-            self.state_history.append(env.state)
-            actions.append(env.action_to_str(next_move))
-            steps += 1
-            if steps > max_steps:
-                break
-            
-        return actions
     
     def update(self, env):
         # we want to BACKTRACK over the states, so that:
