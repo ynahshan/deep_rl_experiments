@@ -100,9 +100,9 @@ class EnvironmentBase(object):
     def reward(self):
         player_pos = self.player_abs_from_state(self.state)
         if player_pos == self.pit:
-            return -10
+            return REWARD_PIT
         elif player_pos == self.goal:
-            return 10
+            return REWARD_GOAL
         else:
             return -1
         
@@ -195,15 +195,12 @@ class EnvironmentBase(object):
                     symbol = '-'
                 else:  
                     state = self.player_abs_to_state(abs_pos)
-                    if full:
+                    if full or state in policy:
                         action = policy[state]
+                        symbol = Action.to_string(action, first_latter=True)
                     else:
-                        if state in policy:
-                            action = policy[state]
-                        else:
-                            action = np.random.choice(self.all_actions())        
+                        symbol = '?'        
                         
-                    symbol = Action.to_string(action, first_latter=True)
                 print((" %s |" % symbol), end='')
             print("")
         print("")
@@ -493,7 +490,7 @@ class GridWorldSolver:
             if i % 1000 == 0 and verbosity <= 1:
                 sys.stdout.write('.')
                 sys.stdout.flush()
-            env = self.env_factory.create_environment(states[i])
+            env = self.env_factory.create_environment(states[i])#TODO: fix this in case of Deterministic world and monte carlo agent
             if env == None:
                 continue
             

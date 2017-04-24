@@ -46,8 +46,8 @@ class MonteCarloAgent(object):
         state, r, done, _ = env.step(action)
         
         # if verbose, draw the grid
-        if self.verbose:
-            env.show()
+#         if self.verbose:
+#             env.show()
             
         return state, r, done
 
@@ -66,13 +66,15 @@ class MonteCarloAgent(object):
             else:
                 a = self.choose_action(env)
                 states_actions_rewards.append((s, a, r))
+                
+            steps += 1
+            # Increase epsilon as workaround to stacking in infinite actions chain
+            if steps > env.grid_size * 2 and self.epoch > 1:
+                self.epoch /= 2
+                
         if self.verbose:
             print("Episode finished\n")
         self.epoch += 1
-        steps += 1
-        # Increase epsilon as workaround to stacking in infinite actions chain
-        if steps > env.grid_size * 2 and self.epoch > 1:
-            self.epoch /= 2
             
 #         elapsed = timeit.default_timer() - start_time
 #         if verbosity >= 2:
@@ -119,6 +121,7 @@ class MonteCarloAgent(object):
             # V(s) has only value if it's not a terminal state 
             if env != None:
                 states_actions_rewards = self.single_episode_exploration(env)
+#                 print(states_actions_rewards)
                 # calculate the returns by working backwards from the terminal state
                 G = 0
                 states_actions_returns = []
@@ -133,7 +136,7 @@ class MonteCarloAgent(object):
                         states_actions_returns.append((s, a, G))
                     G = r + self.gamma * G
                 states_actions_returns.reverse()  # we want it to be in order of state visited
-                
+#                 print(states_actions_returns)
                 # calculate Q(s,a)
                 seen_state_action_pairs = set()
                 for s, a, G in states_actions_returns:
@@ -149,7 +152,8 @@ class MonteCarloAgent(object):
                         self.Q[s][a] = np.mean(returns[sa])
                         seen_state_action_pairs.add(sa)
             
-                self.policy[s] = np.argmax(self.Q[s])
+                for s in self.Q:
+                    self.policy[s] = np.argmax(self.Q[s])
                 if self.verbose:
                     env.show_policy(self.policy, full=False)
                     print(self.Q)
