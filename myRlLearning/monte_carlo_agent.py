@@ -19,7 +19,7 @@ class MonteCarloAgent(object):
         self.greedy_actions = 0
         self.verbose = verbose
 
-    def take_action(self, env):
+    def choose_action(self, env):
         # choose an action based on epsilon-greedy strategy
         r = np.random.rand()
         eps = float(self.eps) / (self.epoch + 1)
@@ -38,36 +38,41 @@ class MonteCarloAgent(object):
             next_move = self.optimal_action(env)
             if self.verbose:
                 print ("Taking a greedy action " + env.action_to_str(next_move))
+                
+        return next_move
+
+    def take_action(self, env, action):        
         # make the move
-        state, r, done, _ = env.step(next_move)
+        state, r, done, _ = env.step(action)
         
         # if verbose, draw the grid
         if self.verbose:
             env.show()
             
-        return state, r, done, next_move
+        return state, r, done
 
     def single_episode_exploration(self, env):
 #         start_time = timeit.default_timer()
         # loops until grid is solved
-#         steps = 0
+        steps = 0
         states_actions_rewards = []
-        s, r, done, a = self.take_action(env)
-        states_actions_rewards.append((s, a, 0))
+        a = self.choose_action(env)
+        states_actions_rewards.append((env.state, a, 0))
         done = False
         while not done:
+            s, r, done = self.take_action(env, a)
             if done:
                 states_actions_rewards.append((s, None, r))
             else:
-                s, r, done, a = self.take_action(env)
+                a = self.choose_action(env)
                 states_actions_rewards.append((s, a, r))
         if self.verbose:
             print("Episode finished\n")
         self.epoch += 1
-#             steps += 1
-#             # Increase epsilon as workaround to stacking in infinite actions chain
-#             if steps > env.grid_size * 2 and self.epoch > 1:
-#                 self.epoch /= 2
+        steps += 1
+        # Increase epsilon as workaround to stacking in infinite actions chain
+        if steps > env.grid_size * 2 and self.epoch > 1:
+            self.epoch /= 2
             
 #         elapsed = timeit.default_timer() - start_time
 #         if verbosity >= 2:
@@ -104,8 +109,8 @@ class MonteCarloAgent(object):
             print("Updating Value function. Policy improvement.")
         
         returns = {}
-        for s in states:
-            if s % 1000 == 0 and verbosity <= 1:
+        for i in states:
+            if i % 1000 == 0 and verbosity <= 1:
                 sys.stdout.write('.')
                 sys.stdout.flush()
 

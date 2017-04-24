@@ -11,8 +11,8 @@ ALL_POSSIBLE_ACTIONS = ('U', 'D', 'L', 'R')
 
 # NOTE: find optimal policy and value function
 #       using on-policy first-visit MC
-
-def random_action(a, eps=0.1):
+epoch = 0
+def random_action(a, eps=1.0):
     # choose given a with probability 1 - eps + eps/4
     # choose some other a' != a with probability eps/4
     p = np.random.random()
@@ -24,10 +24,10 @@ def random_action(a, eps=0.1):
     #   return np.random.choice(tmp)
     #
     # this is equivalent to the above
-    if p < (1 - eps):
-        return a
-    else:
+    if p < (eps / (epoch + 1)):
         return np.random.choice(ALL_POSSIBLE_ACTIONS)
+    else:
+        return a
 
 def play_game(grid, policy):
     # returns a list of states and corresponding returns
@@ -48,9 +48,9 @@ def play_game(grid, policy):
             states_actions_rewards.append((s, None, r))
             break
         else:
-            a = random_action(policy[s]) # the next state is stochastic
+            a = random_action(policy[s])  # the next state is stochastic
             states_actions_rewards.append((s, a, r))
-
+    print(states_actions_rewards)
     # calculate the returns by working backwards from the terminal state
     G = 0
     states_actions_returns = []
@@ -63,8 +63,8 @@ def play_game(grid, policy):
             first = False
         else:
             states_actions_returns.append((s, a, G))
-        G = r + GAMMA*G
-    states_actions_returns.reverse() # we want it to be in order of state visited
+        G = r + GAMMA * G
+    states_actions_returns.reverse()  # we want it to be in order of state visited
     return states_actions_returns
 
 
@@ -88,14 +88,14 @@ if __name__ == '__main__':
 
     # initialize Q(s,a) and returns
     Q = {}
-    returns = {} # dictionary of state -> list of returns we've received
+    returns = {}  # dictionary of state -> list of returns we've received
     states = grid.all_states()
     for s in states:
-        if s in grid.actions: # not a terminal state
+        if s in grid.actions:  # not a terminal state
             Q[s] = {}
             for a in ALL_POSSIBLE_ACTIONS:
                 Q[s][a] = 0
-                returns[(s,a)] = []
+                returns[(s, a)] = []
         else:
             # terminal state or state we can't otherwise get to
             pass
@@ -109,6 +109,9 @@ if __name__ == '__main__':
         # generate an episode using pi
         biggest_change = 0
         states_actions_returns = play_game(grid, policy)
+        
+        global epoch
+        epoch += 1
 
         # calculate Q(s,a)
         seen_state_action_pairs = set()

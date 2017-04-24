@@ -15,7 +15,7 @@ from monte_carlo_agent import MonteCarloAgent
 
 agents = ["simple", "policy_it", "monte_carlo"]
 
-CONVERGENCE_LIMIT = 10e-4
+CONVERGENCE_LIMIT = 10e-5
 
 def create_agent(env, agent_type, verbosity=0):
     if agent_type == "simple":
@@ -23,11 +23,11 @@ def create_agent(env, agent_type, verbosity=0):
     elif agent_type == "policy_it":
         agent = PolicyIterationAgent(env.num_states, env.all_actions())
     elif agent_type == "monte_carlo":
-        agent = MonteCarloAgent(verbose=verbosity >= 1)
+        agent = MonteCarloAgent(eps=1.0, gamma=0.9, verbose=verbosity >= 2)
         
     return agent    
 
-np.random.seed(0)
+# np.random.seed(0)
 if __name__ == '__main__':
     # Prepare Agent
     verbosity = 1  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
@@ -66,7 +66,7 @@ if __name__ == '__main__':
         if verbosity >= 0:
             print()
         total_iterations += 1
-        break
+#         break
     
     elapsed = timeit.default_timer() - start_time
     
