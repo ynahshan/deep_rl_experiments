@@ -11,16 +11,19 @@ import numpy as np
 from grid_world import GridWorldSolver, EnvironmentFactory, REWARD_GOAL
 from simple_value_table_agent import SimpleValueTableAgent
 from policy_iteration_agent import PolicyIterationAgent
+from monte_carlo_agent import MonteCarloAgent
 
-agents = ["simple", "policy_it"]
+agents = ["simple", "policy_it", "monte_carlo"]
 
 CONVERGENCE_LIMIT = 10e-4
 
-def create_agent(env, agent_type):
+def create_agent(env, agent_type, verbosity=0):
     if agent_type == "simple":
         agent = SimpleValueTableAgent(env.num_states)
     elif agent_type == "policy_it":
         agent = PolicyIterationAgent(env.num_states, env.all_actions())
+    elif agent_type == "monte_carlo":
+        agent = MonteCarloAgent(verbose=verbosity >= 1)
         
     return agent    
 
@@ -28,10 +31,9 @@ np.random.seed(0)
 if __name__ == '__main__':
     # Prepare Agent
     verbosity = 1  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
-    env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.RandomPlayer)
+    env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.Deterministic)
     env = env_factory.create_environment()
-    agents = ["simple", "policy_it"]
-    agent = create_agent(env, agents[0])
+    agent = create_agent(env, agents[2], verbosity=verbosity)
     solver = GridWorldSolver(env_factory, agent)
     print("Evaluate %s performance on %s grid world\n" % (agent.__class__.__name__, env.__class__.__name__))
     if verbosity >= 1:
@@ -64,6 +66,7 @@ if __name__ == '__main__':
         if verbosity >= 0:
             print()
         total_iterations += 1
+        break
     
     elapsed = timeit.default_timer() - start_time
     

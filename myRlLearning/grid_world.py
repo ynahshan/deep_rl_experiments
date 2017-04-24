@@ -182,7 +182,7 @@ class EnvironmentBase(object):
             print()
         print()
     
-    def show_policy(self, policy):
+    def show_policy(self, policy, full=True):
         for i in range(self.size):
             print("----------------")
             for j in range(self.size):
@@ -195,7 +195,14 @@ class EnvironmentBase(object):
                     symbol = '-'
                 else:  
                     state = self.player_abs_to_state(abs_pos)
-                    action = policy[state]
+                    if full:
+                        action = policy[state]
+                    else:
+                        if state in policy:
+                            action = policy[state]
+                        else:
+                            action = np.random.choice(self.all_actions())        
+                        
                     symbol = Action.to_string(action, first_latter=True)
                 print((" %s |" % symbol), end='')
             print("")

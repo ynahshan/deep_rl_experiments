@@ -9,11 +9,15 @@ import timeit
 import numpy as np
 
 class MonteCarloAgent(object):
-    def __init__(self, eps = 1.0, gamma=0.9):
+    def __init__(self, eps=1.0, gamma=0.9, verbose=False):
         self.eps = eps
         self.gamma = gamma
         self.epoch = 0
         self.policy = {}
+        self.Q = {}
+        self.random_actions = 0
+        self.greedy_actions = 0
+        self.verbose = verbose
 
     def take_action(self, env):
         # choose an action based on epsilon-greedy strategy
@@ -43,23 +47,23 @@ class MonteCarloAgent(object):
             
         return state, r, done, next_move
 
-    def single_episode_exploration(self, env, verbosity=0):
+    def single_episode_exploration(self, env):
 #         start_time = timeit.default_timer()
-
-        # if verbose, draw the grid
-        if verbosity >= 3:
-            env.show()
         # loops until grid is solved
 #         steps = 0
         states_actions_rewards = []
+        s, r, done, a = self.take_action(env)
+        states_actions_rewards.append((s, a, 0))
         done = False
         while not done:
-            s_prime, r, done, a = self.take_action(env)
             if done:
-                states_actions_rewards.append((s_prime, None, r))
+                states_actions_rewards.append((s, None, r))
             else:
-                states_actions_rewards.append((s_prime, a, r))
-                
+                s, r, done, a = self.take_action(env)
+                states_actions_rewards.append((s, a, r))
+        if self.verbose:
+            print("Episode finished\n")
+        self.epoch += 1
 #             steps += 1
 #             # Increase epsilon as workaround to stacking in infinite actions chain
 #             if steps > env.grid_size * 2 and self.epoch > 1:
@@ -70,10 +74,12 @@ class MonteCarloAgent(object):
 #             print("Solved in %d steps" % len(self.state_history))
 #             print("Time to solve grid %.3f[ms]" % (elapsed * 1000))
 #             print("Random actions %d, greedy actions %d" % (self.random_actions, self.greedy_actions))
+
+        return states_actions_rewards
             
     def display_functions(self, env):
 #         env.show_values(self.V)
-#         env.show_policy(self.policy)
+        env.show_policy(self.policy, full=False)
         pass
     
     def load_model(self, file_name):
@@ -96,6 +102,8 @@ class MonteCarloAgent(object):
     def single_iteration_train(self, env_factory, states, verbosity=0):
         if verbosity >= 1:
             print("Updating Value function. Policy improvement.")
+        
+        returns = {}
         for s in states:
             if s % 1000 == 0 and verbosity <= 1:
                 sys.stdout.write('.')
@@ -105,35 +113,41 @@ class MonteCarloAgent(object):
             env = env_factory.create_environment()
             # V(s) has only value if it's not a terminal state 
             if env != None:
-                a = self.policy[s]
-                s_prime, r, _, _ = env.simulate_step(a)
-                self.V[s] = r + self.gamma * self.V[s_prime]
-                if verbosity >= 3:
-                    env.show_values(V)
+                states_actions_rewards = self.single_episode_exploration(env)
+                # calculate the returns by working backwards from the terminal state
+                G = 0
+                states_actions_returns = []
+                first = True
+                for s, a, r in reversed(states_actions_rewards):
+                    # the value of the terminal state is 0 by definition
+                    # we should ignore the first state we encounter
+                    # and ignore the last G, which is meaningless since it doesn't correspond to any move
+                    if first:
+                        first = False
+                    else:
+                        states_actions_returns.append((s, a, G))
+                    G = r + self.gamma * G
+                states_actions_returns.reverse()  # we want it to be in order of state visited
+                
+                # calculate Q(s,a)
+                seen_state_action_pairs = set()
+                for s, a, G in states_actions_returns:
+                    # check if we have already seen s
+                    # called "first-visit" MC policy evaluation
+                    sa = (s, a)
+                    if sa not in seen_state_action_pairs:
+                        if sa not in returns:
+                            returns[sa] = []
+                        returns[sa].append(G)
+                        if s not in self.Q:
+                            self.Q[s] = np.zeros(len(env.all_actions()))
+                        self.Q[s][a] = np.mean(returns[sa])
+                        seen_state_action_pairs.add(sa)
             
-
-        print()
-        if verbosity >= 1:
-            print("Policy evaluation")
-        for s in states:
-            if s % 1000 == 0 and verbosity <= 1:
-                sys.stdout.write('.')
-                sys.stdout.flush()
-            env = env_factory.create_environment(s)
-            if env != None:
-                best_value = float('-inf')
-                # loop through all possible actions to find the best current action.
-                # It is basically the Q function evaluation for state s.
-                for a in env.all_actions():
-                    s_prime, r, _, _ = env.simulate_step(a)
-                    v = r + self.gamma * self.V[s_prime]
-                    if v > best_value:
-                        best_value = v
-                        best_action = a
-                 
-                self.policy[s] = best_action
-                if verbosity >= 3:
-                    env.show_policy(policy)
+                self.policy[s] = np.argmax(self.Q[s])
+                if self.verbose:
+                    env.show_policy(self.policy, full=False)
+                    print(self.Q)
                     
         print()
         return len(states)
