@@ -12,8 +12,9 @@ from grid_world import GridWorldSolver, EnvironmentFactory, REWARD_GOAL
 from simple_value_table_agent import SimpleValueTableAgent
 from policy_iteration_agent import PolicyIterationAgent
 from monte_carlo_agent import MonteCarloAgent
+from sarsa_agent import SarsaAgent
 
-agents = ["simple", "policy_it", "monte_carlo"]
+agents = ["simple", "policy_it", "monte_carlo", "sarsa"]
 
 CONVERGENCE_LIMIT = 10e-4
 
@@ -24,16 +25,18 @@ def create_agent(env, agent_type, verbosity=0):
         agent = PolicyIterationAgent(env.num_states, env.all_actions())
     elif agent_type == "monte_carlo":
         agent = MonteCarloAgent(eps=1.0, gamma=0.8, verbose=verbosity >= 2)
+    elif agent_type == "sarsa":
+        agent = SarsaAgent(verbose=verbosity >= 2)
         
     return agent    
 
 np.random.seed(0)
 if __name__ == '__main__':
     # Prepare Agent
-    verbosity = 1  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
+    verbosity =3  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
     env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.RandomPlayer)
     env = env_factory.create_environment()
-    agent = create_agent(env, agents[2], verbosity=verbosity)
+    agent = create_agent(env, agents[3], verbosity=verbosity)
     solver = GridWorldSolver(env_factory, agent)
     print("Evaluate %s performance on %s grid world\n" % (agent.__class__.__name__, env.__class__.__name__))
     if verbosity >= 1:
