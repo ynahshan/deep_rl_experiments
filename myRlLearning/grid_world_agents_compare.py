@@ -33,7 +33,7 @@ def create_agent(env, agent_type, verbosity=0):
 np.random.seed(0)
 if __name__ == '__main__':
     # Prepare Agent
-    verbosity =3  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
+    verbosity = 1  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
     env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.RandomPlayer)
     env = env_factory.create_environment()
     agent = create_agent(env, agents[3], verbosity=verbosity)

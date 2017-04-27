@@ -14,7 +14,6 @@ class SarsaAgent(object):
         self.gamma = gamma
         self.alpha = alpha
         self.epoch = 0
-        self.policy = {}
         self.Q = {}
         self.random_actions = 0
         self.greedy_actions = 0
@@ -53,29 +52,34 @@ class SarsaAgent(object):
             
         return state, r, done
 
-    def get_action(self, s, env):
+    def get_action(self, env):
+        s = env.state
         if s not in self.Q:
             self.Q[s] = np.zeros(len(env.all_actions()))
         return self.choose_action(env)
 
+    def print_Q(self, Q):
+        for s in Q:
+            print("%d %s" % (s, str(self.Q[s])))
+
     def single_episode_train(self, env):
 #         start_time = timeit.default_timer()
         # loops until grid is solved
-        s = env.state
         steps = 0
         # the first (s, r) tuple is the state we start in and 0
         # (since we don't get a reward) for simply starting the game
         # the last (s, r) tuple is the terminal state and the final reward
         # the value for the terminal state is by definition 0, so we don't
         # care about updating it.
-        a = self.get_action(s, env)
+        a = self.get_action(env)
         done = False
         while not done:
+            s = env.state
             s2, r, done = self.take_action(env, a)
 
             # we need the next action as well since Q(s,a) depends on Q(s',a')
             # if s2 not in policy then it's a terminal state, all Q are 0
-            a2 = self.get_action(s2, env)
+            a2 = self.get_action(env)
             if s not in self.update_counts_sa:
                 self.update_counts_sa[s] = np.ones(len(env.all_actions()))
             # we will update Q(s,a) AS we experience the episode
@@ -83,17 +87,18 @@ class SarsaAgent(object):
             self.update_counts_sa[s][a] += 0.005
             self.Q[s][a] = self.Q[s][a] + alpha * (r + self.gamma * self.Q[s2][a2] - self.Q[s][a])
 
-            # next state becomes current state
-            s = s2
             a = a2
                 
             steps += 1
             # Increase epsilon as workaround to stacking in infinite actions chain
             if steps > env.grid_size * 2 and self.epoch > 1:
                 self.epoch /= 2
-                
+
         if self.verbose:
-            print("Episode finished\n")
+            print("\nEpisode finished with reward %f" % r)
+            print("Q table:")
+            self.print_Q(self.Q)
+            print()
         self.epoch += 1
             
 #         elapsed = timeit.default_timer() - start_time
@@ -154,7 +159,7 @@ class SarsaAgent(object):
     '''
     def optimal_action(self, env):
         s = env.state
-        if s in self.policy:
+        if s in self.Q:
             return np.argmax(self.Q[s])
         else:
             # if we didn't seen this state before just do random action

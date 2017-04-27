@@ -10,6 +10,7 @@ import timeit
 
 REWARD_GOAL = 10
 REWARD_PIT = -10
+REWARD_STEP = -1
 
 class EnvironmentFactory:
     class EnvironmentType:
@@ -104,7 +105,7 @@ class EnvironmentBase(object):
         elif player_pos == self.goal:
             return REWARD_GOAL
         else:
-            return -1
+            return REWARD_STEP
         
     def is_done(self):
         player_pos = self.player_abs_from_state(self.state)
