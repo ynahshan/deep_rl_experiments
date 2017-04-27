@@ -1,14 +1,14 @@
 '''
-Created on Apr 26, 2017
+Created on Apr 27, 2017
 
-@author: Yury
+@author: ynahshan
 '''
 
 import sys
 import timeit
 import numpy as np
 
-class SarsaAgent(object):
+class QLearningAgent(object):
     def __init__(self, eps=1.0, gamma=0.9, alpha=0.1, verbose=False):
         self.eps = eps
         self.gamma = gamma
@@ -71,23 +71,22 @@ class SarsaAgent(object):
         # the last (s, r) tuple is the terminal state and the final reward
         # the value for the terminal state is by definition 0, so we don't
         # care about updating it.
-        a = self.get_action(env)
         done = False
         while not done:
             s = env.state
+            # epsilon greedy action selection
+            a = self.get_action(env)
             s2, r, done = self.take_action(env, a)
 
-            # we need the next action as well since Q(s,a) depends on Q(s',a')
-            # if s2 not in policy then it's a terminal state, all Q are 0
-            a2 = self.get_action(env)
+            if s2 not in self.Q:
+                self.Q[s2] = np.zeros(len(env.all_actions()))
+
             if s not in self.update_counts_sa:
                 self.update_counts_sa[s] = np.ones(len(env.all_actions()))
-            # we will update Q(s,a) AS we experience the episode
+
             alpha = self.alpha / self.update_counts_sa[s][a]
             self.update_counts_sa[s][a] += 0.005
-            self.Q[s][a] = self.Q[s][a] + alpha * (r + self.gamma * self.Q[s2][a2] - self.Q[s][a])
-
-            a = a2
+            self.Q[s][a] = self.Q[s][a] + alpha * (r + self.gamma * self.Q[s2].max() - self.Q[s][a])
                 
             steps += 1
             # Increase epsilon as workaround to stacking in infinite actions chain

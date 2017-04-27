@@ -13,8 +13,9 @@ from simple_value_table_agent import SimpleValueTableAgent
 from policy_iteration_agent import PolicyIterationAgent
 from monte_carlo_agent import MonteCarloAgent
 from sarsa_agent import SarsaAgent
+from qlearning_agent import QLearningAgent
 
-agents = ["simple", "policy_it", "monte_carlo", "sarsa"]
+agents = ["simple", "policy_it", "monte_carlo", "sarsa", "qlearning"]
 
 CONVERGENCE_LIMIT = 10e-4
 
@@ -27,6 +28,8 @@ def create_agent(env, agent_type, verbosity=0):
         agent = MonteCarloAgent(eps=1.0, gamma=0.8, verbose=verbosity >= 2)
     elif agent_type == "sarsa":
         agent = SarsaAgent(verbose=verbosity >= 2)
+    elif agent_type == "qlearning":
+        agent = QLearningAgent(verbose=verbosity >= 2)
         
     return agent    
 
@@ -36,7 +39,7 @@ if __name__ == '__main__':
     verbosity = 1  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
     env_factory = EnvironmentFactory(EnvironmentFactory.EnvironmentType.RandomPlayer)
     env = env_factory.create_environment()
-    agent = create_agent(env, agents[3], verbosity=verbosity)
+    agent = create_agent(env, agents[4], verbosity=verbosity)
     solver = GridWorldSolver(env_factory, agent)
     print("Evaluate %s performance on %s grid world\n" % (agent.__class__.__name__, env.__class__.__name__))
     if verbosity >= 1:
@@ -51,6 +54,9 @@ if __name__ == '__main__':
     rewards = []
     total_steps = 0
     total_iterations = 0
+    convergence_count = 0
+    CONVERGENCE_STOP_COUNT = 2
+#     while total_iterations < 7:
     while not converged:
         print("[%d] Train agent with all possible states" % total_iterations)
         steps = solver.train(range(env.num_states), verbosity)
@@ -64,7 +70,10 @@ if __name__ == '__main__':
         if total_iterations > 0:
             diff = rewards[total_iterations] - rewards[total_iterations - 1]
             if np.abs(diff) < CONVERGENCE_LIMIT:
-                converged = True 
+                convergence_count += 1 
+        
+        if convergence_count >= CONVERGENCE_STOP_COUNT:
+            converged = True
         
         if verbosity >= 0:
             print()
