@@ -82,7 +82,7 @@ class MonteCarloAgent(object):
 #             print("Time to solve grid %.3f[ms]" % (elapsed * 1000))
 #             print("Random actions %d, greedy actions %d" % (self.random_actions, self.greedy_actions))
 
-        return states_actions_rewards
+        return states_actions_rewards, steps
             
     def display_functions(self, env):
 #         env.show_values(self.V)
@@ -110,6 +110,7 @@ class MonteCarloAgent(object):
         if verbosity >= 1:
             print("Updating Value function. Policy improvement.")
         
+        total_steps = 0
         returns = {}
         for i in states:
             if i % 1000 == 0 and verbosity <= 1:
@@ -120,7 +121,8 @@ class MonteCarloAgent(object):
             env = env_factory.create_environment()
             # V(s) has only value if it's not a terminal state 
             if env != None:
-                states_actions_rewards = self.single_episode_exploration(env)
+                states_actions_rewards, steps = self.single_episode_exploration(env)
+                total_steps += steps
 #                 print(states_actions_rewards)
                 # calculate the returns by working backwards from the terminal state
                 G = 0
@@ -159,7 +161,7 @@ class MonteCarloAgent(object):
                     print(self.Q)
                     
         print()
-        return len(states)
+        return total_steps
 
     '''
     Interface method
