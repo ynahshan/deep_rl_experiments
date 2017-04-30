@@ -8,12 +8,12 @@ import timeit
 import matplotlib.pyplot as plt
 import numpy as np
 
-from environments.grid_world import GridWorldSolver, EnvironmentFactory, REWARD_GOAL
-from agents.simple_value_table_agent import SimpleValueTableAgent
-from agents.policy_iteration_agent import PolicyIterationAgent
-from agents.monte_carlo_agent import MonteCarloAgent
-from agents.sarsa_agent import SarsaAgent
-from agents.qlearning_agent import QLearningAgent
+from rl.environments.grid_world import GridWorldSolver, EnvironmentFactory, REWARD_GOAL
+from rl.agents.simple_value_table_agent import SimpleValueTableAgent
+from rl.agents.monte_carlo_agent import MonteCarloAgent
+from rl.agents.policy_iteration_agent import PolicyIterationAgent
+from rl.agents.sarsa_agent import SarsaAgent
+from rl.agents.qlearning_agent import QLearningAgent
 
 np.random.seed(0)
 GAMMA = 0.7
