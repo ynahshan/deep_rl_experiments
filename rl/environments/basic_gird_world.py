@@ -7,6 +7,13 @@ Created on Apr 30, 2017
 import numpy as np
 from rl.environments.grid_world import RandomPlayerEnvironment
 
+class ActionSpace(object):
+    def __init__(self, n):
+        self.n = n
+        
+    def sample(self):
+        return np.random.choice(self.n)
+
 class BasicGridWorld(object):
     name = 'BasicGridWorld-v0'
     def __init__(self):
@@ -14,6 +21,7 @@ class BasicGridWorld(object):
         Constructor
         '''
         self.__env = None
+        self.action_space = ActionSpace(4)
     
     def step(self, action):
         # Do not check that __env != None to improve performance

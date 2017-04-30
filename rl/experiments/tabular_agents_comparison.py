@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from rl.environments.grid_world import GridWorldSolver, EnvironmentFactory, REWARD_GOAL
-from rl.agents.simple_value_table_agent import SimpleValueTableAgent
 from rl.agents.monte_carlo_agent import MonteCarloTabularAgent
 from rl.agents.policy_iteration_agent import PolicyIterationAgent
 from rl.agents.sarsa_agent import SarsaTabularAgent
@@ -20,16 +19,21 @@ GAMMA = 0.7
 ALPHA = 0.8
 
 def create_agent(env, agent_type, gamma, alpha, verbosity=0):
-    if agent_type == "simple":
-        agent = SimpleValueTableAgent(env.num_states)
-    elif agent_type == "policy_it":
+    class EnvDescriptor:
+        def __init__(self, env):
+            self.env = env
+            self.episod_limit = env.grid_size
+        def action_to_str(self, action):
+            return env.action_to_str(action)
+
+    if agent_type == "policy_it":
         agent = PolicyIterationAgent(env.num_states, env.all_actions())
     elif agent_type == "monte_carlo":
-        agent = MonteCarloTabularAgent(gamma=gamma, verbose=verbosity >= 2)
+        agent = MonteCarloTabularAgent(gamma=gamma, env_descriptor=EnvDescriptor(env), verbose=verbosity >= 2)
     elif agent_type == "sarsa":
-        agent = SarsaTabularAgent(gamma=gamma, alpha=alpha, verbose=verbosity >= 2)
+        agent = SarsaTabularAgent(gamma=gamma, alpha=alpha, env_descriptor=EnvDescriptor(env), verbose=verbosity >= 2)
     elif agent_type == "qlearning":
-        agent = QLearningTabularAgent(gamma=gamma, alpha=alpha, verbose=verbosity >= 2)
+        agent = QLearningTabularAgent(gamma=gamma, alpha=alpha, env_descriptor=EnvDescriptor(env), verbose=verbosity >= 2)
         
     return agent    
 
@@ -39,7 +43,7 @@ def train_agent(agent_name, env_type, gamma, alpha, verbosity=1):
     agent = create_agent(env, agent_name, gamma, alpha, verbosity=verbosity)
     solver = GridWorldSolver(env_factory, agent)
     print("Evaluate %s performance on %s grid world\n" % (agent.__class__.__name__, env.__class__.__name__))
-    if verbosity >= 1:
+    if verbosity >= 3:
         print("World example:")
         env.show()
         print()
@@ -94,10 +98,11 @@ def train_agent(agent_name, env_type, gamma, alpha, verbosity=1):
 if __name__ == '__main__':
     # Prepare Agent
     verbosity = 0  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
-    env_type = EnvironmentFactory.EnvironmentType.RandomPlayerAndGoal
-#     agents = ["simple", "policy_it", "monte_carlo", "sarsa", "qlearning"]
+    env_type = EnvironmentFactory.EnvironmentType.RandomPlayer
+#     agents = ["policy_it", "monte_carlo", "sarsa", "qlearning"]
     agents = ["monte_carlo", "sarsa", "qlearning"]
 #     agents = ["sarsa", "qlearning"]
+#     agents = ["monte_carlo"]
 
     res = {}
     max_it = -1

@@ -9,7 +9,7 @@ import timeit
 import numpy as np
 
 class MonteCarloTabularAgent(object):
-    def __init__(self, eps=1.0, gamma=0.9, verbose=False):
+    def __init__(self, eps=1.0, gamma=0.9, env_descriptor = None, verbose=False):
         self.eps = eps
         self.gamma = gamma
         self.epoch = 0
@@ -19,58 +19,52 @@ class MonteCarloTabularAgent(object):
         self.random_actions = 0
         self.greedy_actions = 0
         self.verbose = verbose
+        self.env_descriptor = env_descriptor
 
-    def choose_action(self, env):
+    def choose_action(self, env, s):
         # choose an action based on epsilon-greedy strategy
         r = np.random.rand()
         eps = float(self.eps) / (self.epoch + 1)
         if r < eps:
             # take a random action
-            next_move = np.random.choice(len(env.all_actions()))
+            next_move = np.random.choice(env.action_space.n)
             self.random_actions += 1
             if self.verbose:
-                print("Taking a random action " + env.action_to_str(next_move))
+                if self.env_descriptor != None:
+                    print("Taking a random action " + self.env_descriptor.action_to_str(next_move))
                 print("epsilog: %r < %f" % (r, eps))
         else:
             # choose the best action based on current values of states
             # loop through all possible moves, get their values
             # keep track of the best value
             self.greedy_actions += 1
-            next_move = self.optimal_action(env)
+            next_move = self.optimal_action(s, env.action_space.n)
             if self.verbose:
-                print ("Taking a greedy action " + env.action_to_str(next_move))
+                if self.env_descriptor != None:
+                    print ("Taking a greedy action " + self.env_descriptor.action_to_str(next_move))
                 
         return next_move
-
-    def take_action(self, env, action):        
-        # make the move
-        state, r, done, _ = env.step(action)
-        
-        # if verbose, draw the grid
-#         if self.verbose:
-#             env.show()
-            
-        return state, r, done
 
     def single_episode_exploration(self, env):
 #         start_time = timeit.default_timer()
         # loops until grid is solved
         steps = 0
         states_actions_rewards = []
-        a = self.choose_action(env)
-        states_actions_rewards.append((env.state, a, 0))
+        s = env.reset()
+        a = self.choose_action(env, s)
+        states_actions_rewards.append((s, a, 0))
         done = False
         while not done:
-            s, r, done = self.take_action(env, a)
+            s, r, done, _ = env.step(a)
             if done:
                 states_actions_rewards.append((s, None, r))
             else:
-                a = self.choose_action(env)
+                a = self.choose_action(env, s)
                 states_actions_rewards.append((s, a, r))
                 
             steps += 1
             # Increase epsilon as workaround to stacking in infinite actions chain
-            if steps > env.grid_size * 2 and self.epoch > 1:
+            if self.env_descriptor != None and steps > self.env_descriptor.episod_limit and self.epoch > 1:
                 self.epoch /= 2
                 
         if self.verbose:
@@ -87,7 +81,7 @@ class MonteCarloTabularAgent(object):
             
     def display_functions(self, env):
 #         env.show_values(self.V)
-        env.show_policy(self.policy, full=False)
+        env.show_policy(self.policy)
         pass
     
     def load_model(self, file_name):
@@ -133,14 +127,14 @@ class MonteCarloTabularAgent(object):
                     self.returns[sa] = []
                 self.returns[sa].append(G)
                 if s not in self.Q:
-                    self.Q[s] = np.zeros(len(env.all_actions()))
+                    self.Q[s] = np.zeros(env.action_space.n)
                 self.Q[s][a] = np.mean(self.returns[sa])
                 seen_state_action_pairs.add(sa)
     
         for s in self.Q:
             self.policy[s] = np.argmax(self.Q[s])
         if self.verbose:
-            env.show_policy(self.policy, full=False)
+#             env.show_policy(self.policy)
             print(self.Q)
             
         return steps
@@ -172,10 +166,9 @@ class MonteCarloTabularAgent(object):
     '''
     Interface method
     '''
-    def optimal_action(self, env):
-        s = env.state
+    def optimal_action(self, s, action_space):
         if s in self.policy:
             return self.policy[s]
         else:
-            # if we didn't seen this state before just do random action
-            return np.random.choice(env.all_actions())
+            # if we didn't seen this state before just return rundom_action
+            return np.random.choice(action_space)

@@ -9,7 +9,7 @@ import timeit
 import numpy as np
 
 class SarsaTabularAgent(object):
-    def __init__(self, eps=1.0, gamma=0.9, alpha=0.1, verbose=False):
+    def __init__(self, eps=1.0, gamma=0.9, alpha=0.1, env_descriptor = None, verbose=False):
         self.eps = eps
         self.gamma = gamma
         self.alpha = alpha
@@ -19,44 +19,31 @@ class SarsaTabularAgent(object):
         self.greedy_actions = 0
         self.verbose = verbose
         self.update_counts_sa = {}
+        self.env_descriptor = env_descriptor
 
-    def choose_action(self, env):
+    def choose_action(self, env, s):
         # choose an action based on epsilon-greedy strategy
         r = np.random.rand()
         eps = float(self.eps) / (self.epoch + 1)
         if r < eps:
             # take a random action
-            next_move = np.random.choice(len(env.all_actions()))
+            next_move = np.random.choice(env.action_space.n)
             self.random_actions += 1
             if self.verbose:
-                print("Taking a random action " + env.action_to_str(next_move))
+                if self.env_descriptor != None:
+                    print("Taking a random action " + self.env_descriptor.action_to_str(next_move))
                 print("epsilon: %r < %f" % (r, eps))
         else:
             # choose the best action based on current values of states
             # loop through all possible moves, get their values
             # keep track of the best value
             self.greedy_actions += 1
-            next_move = self.optimal_action(env)
+            next_move = self.optimal_action(s, env.action_space.n)
             if self.verbose:
-                print ("Taking a greedy action " + env.action_to_str(next_move))
+                if self.env_descriptor != None:
+                    print ("Taking a greedy action " + self.env_descriptor.action_to_str(next_move))
                 
         return next_move
-
-    def take_action(self, env, action):        
-        # make the move
-        state, r, done, _ = env.step(action)
-        
-        # if verbose, draw the grid
-#         if self.verbose:
-#             env.show()
-            
-        return state, r, done
-
-    def get_action(self, env):
-        s = env.state
-        if s not in self.Q:
-            self.Q[s] = np.zeros(len(env.all_actions()))
-        return self.choose_action(env)
 
     def print_Q(self, Q):
         for s in Q:
@@ -71,17 +58,22 @@ class SarsaTabularAgent(object):
         # the last (s, r) tuple is the terminal state and the final reward
         # the value for the terminal state is by definition 0, so we don't
         # care about updating it.
-        a = self.get_action(env)
-        done = False
         s = env.reset()
+        if s not in self.Q:
+            self.Q[s] = np.zeros(env.action_space.n)
+        a = self.choose_action(env, s)
+        done = False
         while not done:
-            s2, r, done = self.take_action(env, a)
+            s2, r, done, _ = env.step(a)
 
             # we need the next action as well since Q(s,a) depends on Q(s',a')
             # if s2 not in policy then it's a terminal state, all Q are 0
-            a2 = self.get_action(env)
+            if s2 not in self.Q:
+                self.Q[s2] = np.zeros(env.action_space.n)
+            a2 = self.choose_action(env, s2)
+
             if s not in self.update_counts_sa:
-                self.update_counts_sa[s] = np.ones(len(env.all_actions()))
+                self.update_counts_sa[s] = np.ones(env.action_space.n)
             # we will update Q(s,a) AS we experience the episode
             alpha = self.alpha / self.update_counts_sa[s][a]
             self.update_counts_sa[s][a] += 0.005
@@ -92,7 +84,7 @@ class SarsaTabularAgent(object):
                 
             steps += 1
             # Increase epsilon as workaround to stacking in infinite actions chain
-            if steps > env.grid_size * 2 and self.epoch > 1:
+            if self.env_descriptor != None and steps > self.env_descriptor.episod_limit and self.epoch > 1:
                 self.epoch /= 2
 
         if self.verbose:
@@ -159,10 +151,9 @@ class SarsaTabularAgent(object):
     '''
     Interface method
     '''
-    def optimal_action(self, env):
-        s = env.state
+    def optimal_action(self, s, action_space):
         if s in self.Q:
             return np.argmax(self.Q[s])
         else:
-            # if we didn't seen this state before just do random action
-            return np.random.choice(env.all_actions())
+            # if we didn't seen this state before just return rundom_action
+            return np.random.choice(action_space)

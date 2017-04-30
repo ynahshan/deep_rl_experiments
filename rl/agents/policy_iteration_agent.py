@@ -74,7 +74,7 @@ class PolicyIterationAgent(object):
                  
                 self.policy[s] = best_action
                 if verbosity >= 3:
-                    env.show_policy(policy)
+                    env.show_policy(self.policy)
                     
         print()
         return len(states)
@@ -82,8 +82,7 @@ class PolicyIterationAgent(object):
     '''
     Interface method
     '''
-    def optimal_action(self, env):
-        s = env.state
+    def optimal_action(self, s, action_space):
         return self.policy[s]
 
 np.random.seed(0)

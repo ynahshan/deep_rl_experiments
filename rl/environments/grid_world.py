@@ -63,11 +63,19 @@ class Action:
             return 'n/a'
         
 class EnvironmentBase(object):
+    class ActionSpace:
+        def __init__(self, n):
+            self.n = n
+            
+        def sample(self):
+            return np.random.choice(self.n)
+        
     size = 4
     grid_size = size * size
     grid_size_square = grid_size ** 2
     grid_size_cube = grid_size ** 3
     __all_actions = [Action.UP, Action.DOWN, Action.LEFT, Action.RIGHT]
+    action_space = ActionSpace(len(__all_actions))
     
     def __init__(self, player, goal, pit, wall, state):
         # Assume that all parameters are valid
@@ -87,7 +95,8 @@ class EnvironmentBase(object):
     def all_actions(self):
         return self.__all_actions
     
-    def action_to_str(self, action):
+    @classmethod
+    def action_to_str(cls, action):
         return Action.to_string(action)
     
     @classmethod
@@ -477,7 +486,7 @@ class GridWorldSolver:
         done = False
         total_reward = 0
         while not done:
-            next_move = self.agent.optimal_action(env)
+            next_move = self.agent.optimal_action(env.state, env.action_space.n)
             # make the move
             _, r, done, _ = env.step(next_move)
             total_reward += r
