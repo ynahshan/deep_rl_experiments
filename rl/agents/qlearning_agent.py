@@ -8,7 +8,7 @@ import sys
 import timeit
 import numpy as np
 
-class QLearningAgent(object):
+class QLearningTabularAgent(object):
     def __init__(self, eps=1.0, gamma=0.9, alpha=0.1, verbose=False):
         self.eps = eps
         self.gamma = gamma
@@ -42,22 +42,6 @@ class QLearningAgent(object):
                 
         return next_move
 
-    def take_action(self, env, action):        
-        # make the move
-        state, r, done, _ = env.step(action)
-        
-        # if verbose, draw the grid
-#         if self.verbose:
-#             env.show()
-            
-        return state, r, done
-
-    def get_action(self, env):
-        s = env.state
-        if s not in self.Q:
-            self.Q[s] = np.zeros(len(env.all_actions()))
-        return self.choose_action(env)
-
     def print_Q(self, Q):
         for s in Q:
             print("%d %s" % (s, str(self.Q[s])))
@@ -72,11 +56,13 @@ class QLearningAgent(object):
         # the value for the terminal state is by definition 0, so we don't
         # care about updating it.
         done = False
+        s = env.reset()
         while not done:
-            s = env.state
+            if s not in self.Q:
+                self.Q[s] = np.zeros(len(env.all_actions()))
             # epsilon greedy action selection
-            a = self.get_action(env)
-            s2, r, done = self.take_action(env, a)
+            a = self.choose_action(env)
+            s2, r, done, _ = env.step(a)
 
             if s2 not in self.Q:
                 self.Q[s2] = np.zeros(len(env.all_actions()))
@@ -92,6 +78,8 @@ class QLearningAgent(object):
             # Increase epsilon as workaround to stacking in infinite actions chain
             if steps > env.grid_size * 2 and self.epoch > 1:
                 self.epoch /= 2
+                
+            s = s2
 
         if self.verbose:
             print("\nEpisode finished with reward %f" % r)

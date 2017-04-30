@@ -111,6 +111,10 @@ class EnvironmentBase(object):
         player_pos = self.player_abs_from_state(self.state)
         return player_pos == self.pit or player_pos == self.goal
     
+    # Simulate reset to match openai gym api
+    def reset(self):
+        return self.state
+    
     def step(self, action):
         # up (row - 1)
         if action == Action.UP:

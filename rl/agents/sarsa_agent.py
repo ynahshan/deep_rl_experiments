@@ -8,7 +8,7 @@ import sys
 import timeit
 import numpy as np
 
-class SarsaAgent(object):
+class SarsaTabularAgent(object):
     def __init__(self, eps=1.0, gamma=0.9, alpha=0.1, verbose=False):
         self.eps = eps
         self.gamma = gamma
@@ -73,8 +73,8 @@ class SarsaAgent(object):
         # care about updating it.
         a = self.get_action(env)
         done = False
+        s = env.reset()
         while not done:
-            s = env.state
             s2, r, done = self.take_action(env, a)
 
             # we need the next action as well since Q(s,a) depends on Q(s',a')
@@ -88,6 +88,7 @@ class SarsaAgent(object):
             self.Q[s][a] = self.Q[s][a] + alpha * (r + self.gamma * self.Q[s2][a2] - self.Q[s][a])
 
             a = a2
+            s = s2
                 
             steps += 1
             # Increase epsilon as workaround to stacking in infinite actions chain

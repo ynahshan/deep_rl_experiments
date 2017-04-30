@@ -8,13 +8,14 @@ import sys
 import timeit
 import numpy as np
 
-class MonteCarloAgent(object):
+class MonteCarloTabularAgent(object):
     def __init__(self, eps=1.0, gamma=0.9, verbose=False):
         self.eps = eps
         self.gamma = gamma
         self.epoch = 0
         self.policy = {}
         self.Q = {}
+        self.returns = {}
         self.random_actions = 0
         self.greedy_actions = 0
         self.verbose = verbose
@@ -103,6 +104,47 @@ class MonteCarloAgent(object):
 #         model.tofile(file_name)
         pass
     
+    def single_episode_train(self, env):
+        states_actions_rewards, steps = self.single_episode_exploration(env)
+#                 print(states_actions_rewards)
+        # calculate the returns by working backwards from the terminal state
+        G = 0
+        states_actions_returns = []
+        first = True
+        for s, a, r in reversed(states_actions_rewards):
+            # the value of the terminal state is 0 by definition
+            # we should ignore the first state we encounter
+            # and ignore the last G, which is meaningless since it doesn't correspond to any move
+            if first:
+                first = False
+            else:
+                states_actions_returns.append((s, a, G))
+            G = r + self.gamma * G
+        states_actions_returns.reverse()  # we want it to be in order of state visited
+#                 print(states_actions_returns)
+        # calculate Q(s,a)
+        seen_state_action_pairs = set()
+        for s, a, G in states_actions_returns:
+            # check if we have already seen s
+            # called "first-visit" MC policy evaluation
+            sa = (s, a)
+            if sa not in seen_state_action_pairs:
+                if sa not in self.returns:
+                    self.returns[sa] = []
+                self.returns[sa].append(G)
+                if s not in self.Q:
+                    self.Q[s] = np.zeros(len(env.all_actions()))
+                self.Q[s][a] = np.mean(self.returns[sa])
+                seen_state_action_pairs.add(sa)
+    
+        for s in self.Q:
+            self.policy[s] = np.argmax(self.Q[s])
+        if self.verbose:
+            env.show_policy(self.policy, full=False)
+            print(self.Q)
+            
+        return steps
+    
     '''
     Interface method
     '''
@@ -111,7 +153,7 @@ class MonteCarloAgent(object):
             print("Updating Value function. Policy improvement.")
         
         total_steps = 0
-        returns = {}
+#         returns = {}
         for i in states:
             if i % 1000 == 0 and verbosity <= 1:
                 sys.stdout.write('.')
@@ -121,44 +163,8 @@ class MonteCarloAgent(object):
             env = env_factory.create_environment()
             # V(s) has only value if it's not a terminal state 
             if env != None:
-                states_actions_rewards, steps = self.single_episode_exploration(env)
+                steps = self.single_episode_train(env)
                 total_steps += steps
-#                 print(states_actions_rewards)
-                # calculate the returns by working backwards from the terminal state
-                G = 0
-                states_actions_returns = []
-                first = True
-                for s, a, r in reversed(states_actions_rewards):
-                    # the value of the terminal state is 0 by definition
-                    # we should ignore the first state we encounter
-                    # and ignore the last G, which is meaningless since it doesn't correspond to any move
-                    if first:
-                        first = False
-                    else:
-                        states_actions_returns.append((s, a, G))
-                    G = r + self.gamma * G
-                states_actions_returns.reverse()  # we want it to be in order of state visited
-#                 print(states_actions_returns)
-                # calculate Q(s,a)
-                seen_state_action_pairs = set()
-                for s, a, G in states_actions_returns:
-                    # check if we have already seen s
-                    # called "first-visit" MC policy evaluation
-                    sa = (s, a)
-                    if sa not in seen_state_action_pairs:
-                        if sa not in returns:
-                            returns[sa] = []
-                        returns[sa].append(G)
-                        if s not in self.Q:
-                            self.Q[s] = np.zeros(len(env.all_actions()))
-                        self.Q[s][a] = np.mean(returns[sa])
-                        seen_state_action_pairs.add(sa)
-            
-                for s in self.Q:
-                    self.policy[s] = np.argmax(self.Q[s])
-                if self.verbose:
-                    env.show_policy(self.policy, full=False)
-                    print(self.Q)
                     
         print()
         return total_steps

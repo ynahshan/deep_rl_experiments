@@ -10,10 +10,10 @@ import numpy as np
 
 from rl.environments.grid_world import GridWorldSolver, EnvironmentFactory, REWARD_GOAL
 from rl.agents.simple_value_table_agent import SimpleValueTableAgent
-from rl.agents.monte_carlo_agent import MonteCarloAgent
+from rl.agents.monte_carlo_agent import MonteCarloTabularAgent
 from rl.agents.policy_iteration_agent import PolicyIterationAgent
-from rl.agents.sarsa_agent import SarsaAgent
-from rl.agents.qlearning_agent import QLearningAgent
+from rl.agents.sarsa_agent import SarsaTabularAgent
+from rl.agents.qlearning_agent import QLearningTabularAgent
 
 np.random.seed(0)
 GAMMA = 0.7
@@ -25,11 +25,11 @@ def create_agent(env, agent_type, gamma, alpha, verbosity=0):
     elif agent_type == "policy_it":
         agent = PolicyIterationAgent(env.num_states, env.all_actions())
     elif agent_type == "monte_carlo":
-        agent = MonteCarloAgent(gamma=gamma, verbose=verbosity >= 2)
+        agent = MonteCarloTabularAgent(gamma=gamma, verbose=verbosity >= 2)
     elif agent_type == "sarsa":
-        agent = SarsaAgent(gamma=gamma, alpha=alpha, verbose=verbosity >= 2)
+        agent = SarsaTabularAgent(gamma=gamma, alpha=alpha, verbose=verbosity >= 2)
     elif agent_type == "qlearning":
-        agent = QLearningAgent(gamma=gamma, alpha=alpha, verbose=verbosity >= 2)
+        agent = QLearningTabularAgent(gamma=gamma, alpha=alpha, verbose=verbosity >= 2)
         
     return agent    
 
@@ -96,8 +96,8 @@ if __name__ == '__main__':
     verbosity = 0  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
     env_type = EnvironmentFactory.EnvironmentType.RandomPlayerAndGoal
 #     agents = ["simple", "policy_it", "monte_carlo", "sarsa", "qlearning"]
-#     agents = ["monte_carlo", "sarsa", "qlearning"]
-    agents = ["sarsa", "qlearning"]
+    agents = ["monte_carlo", "sarsa", "qlearning"]
+#     agents = ["sarsa", "qlearning"]
 
     res = {}
     max_it = -1
