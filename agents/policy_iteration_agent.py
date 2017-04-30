@@ -6,7 +6,7 @@ Created on Apr 20, 2017
 
 import sys
 import timeit
-from grid_world import *
+from environments.grid_world import *
 import numpy as np
 
 

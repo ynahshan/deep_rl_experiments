@@ -8,7 +8,7 @@ import timeit
 import matplotlib.pyplot as plt
 import numpy as np
 
-from grid_world import GridWorldSolver, EnvironmentFactory, REWARD_GOAL
+from environments.grid_world import GridWorldSolver, EnvironmentFactory, REWARD_GOAL
 from simple_value_table_agent import SimpleValueTableAgent
 from policy_iteration_agent import PolicyIterationAgent
 from monte_carlo_agent import MonteCarloAgent
