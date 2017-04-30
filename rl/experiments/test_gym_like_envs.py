@@ -9,8 +9,8 @@ from rl.environments import gym_like as gym
 if __name__ == '__main__':
     print(gym.env_list())
     
-    env = gym.make('BasicGridWorld')
-    env.reset()
+    env = gym.make('BasicGridWorld-v0')
+    print(env.reset())
     
     env.render()
     
