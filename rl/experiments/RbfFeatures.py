@@ -12,10 +12,11 @@ from sklearn.pipeline import FeatureUnion
 
 np.random.seed(0)
 if __name__ == '__main__':
-    X = np.arange(16).astype(float)
+#     X = np.arange(16).astype(float)
+    X = np.array([(i,j) for i in range(4) for j in range(4)])
     print("Input data")
     print(X)
-    X = X.reshape(X.size, 1)
+#     X = X.reshape(X.size, 1)
     scaler = StandardScaler()
     scaler.fit(X)
     X_norm = scaler.transform(X)
@@ -23,7 +24,7 @@ if __name__ == '__main__':
     print(X_norm.squeeze())
     print()
     
-    n_cmp = 4
+    n_cmp = 5
 #     rbfs = RBFSampler(gamma=1, n_components=n_cmp)
     rbfs  = FeatureUnion([
                 ("rbf1", RBFSampler(gamma=0.05, n_components=n_cmp)),
@@ -35,7 +36,8 @@ if __name__ == '__main__':
                 ])
     X_features = rbfs.fit_transform(X)
     
-    print("Dimensions of feature space is %d\n" % X_features.shape[1])
+    print("Number of features %d" % X_features.shape[1])
+    print("Dimensions of feature space is" + str(X_features.shape) + "\n")
     
     print("RBF Features of input data")
     print(X_features.squeeze())
