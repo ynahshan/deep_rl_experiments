@@ -14,26 +14,13 @@ class ActionSpace(object):
     def sample(self):
         return np.random.choice(self.n)
 
-class BasicGridWorld_v0(object):
-    name = 'BasicGridWorld-v0'
+class GridWorldBase(object):
     def __init__(self):
         '''
         Constructor
         '''
         self._env = None
         self.action_space = ActionSpace(4)
-    
-    def step(self, action):
-        # Do not check that _env != None to improve performance
-        observation, reward, done, info = self._env.step(action)
-        if done:
-            self._env = None
-            
-        return observation, reward, done, info 
-    
-    def reset(self):
-        self._env = RandomPlayerEnvironment()
-        return self._env.state
     
     def render(self):
         self._env.show()
@@ -45,43 +32,7 @@ class BasicGridWorld_v0(object):
         if seed != None:
             np.random.seed(seed)
         return [seed]
-    
-class BasicGridWorld_v1(object):
-    name = 'BasicGridWorld-v1'
-    def __init__(self):
-        '''
-        Constructor
-        '''
-        self._env = None
-        self.action_space = ActionSpace(4)
-    
-    def step(self, action):
-        # Do not check that _env != None to improve performance
-        _, reward, done, info = self._env.step(action)
-        observation = (self._env.player, self._env.goal)
-        if done:
-            self._env = None
-        
-        return observation, reward, done, info 
-    
-    def reset(self):
-        self._env = RandomGoalAndPlayerEnvironment()
-        return (self._env.player, self._env.goal)
-    
-    def render(self):
-        self._env.show()
-    
-    def close(self):
-        self._env = None
-    
-    def seed(self, seed=None):
-        if seed != None:
-            np.random.seed(seed)
-        return [seed]
-
-    def state(self):
-        return (self._env.player, self._env.goal)
-
+      
     def show_policy(self, policy):
         for i in range(self._env.size):
             print("----------------")
@@ -94,7 +45,7 @@ class BasicGridWorld_v1(object):
                 elif abs_pos == self._env.pit:
                     symbol = '-'
                 else:
-                    state = (abs_pos, self._env.goal)
+                    state = self.state_pos(abs_pos)
                     if state in policy:
                         action = policy[state]
                         symbol = Action.to_string(action, first_latter=True)
@@ -117,7 +68,7 @@ class BasicGridWorld_v1(object):
                 elif abs_pos == self._env.pit:
                     symbol = '  -  '
                 else:
-                    state = (abs_pos, self._env.goal)
+                    state = self.state_pos(abs_pos)
                     if state in V:
                         symbol = "%.2f" % (V[state])
                     else:
@@ -125,3 +76,46 @@ class BasicGridWorld_v1(object):
                 print((" %s |" % symbol), end='')
             print("")
         print("")
+
+class BasicGridWorld_v0(GridWorldBase):
+    name = 'BasicGridWorld-v0'
+    
+    def step(self, action):
+        # Do not check that _env != None to improve performance
+        observation, reward, done, info = self._env.step(action)
+        if done:
+            self._env = None
+            
+        return observation, reward, done, info 
+    
+    def reset(self):
+        self._env = RandomPlayerEnvironment()
+        return self._env.state
+
+    def state_pos(self, pos):
+        return pos
+    
+    def state(self):
+        return self._env.player
+    
+class BasicGridWorld_v1(GridWorldBase):
+    name = 'BasicGridWorld-v1'
+    
+    def step(self, action):
+        # Do not check that _env != None to improve performance
+        _, reward, done, info = self._env.step(action)
+        observation = (self._env.player, self._env.goal)
+        if done:
+            self._env = None
+        
+        return observation, reward, done, info 
+    
+    def reset(self):
+        self._env = RandomGoalAndPlayerEnvironment()
+        return (self._env.player, self._env.goal)
+
+    def state_pos(self, pos):
+        return (pos, self._env.goal)
+    
+    def state(self):
+        return (self._env.player, self._env.goal)
