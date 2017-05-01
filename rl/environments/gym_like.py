@@ -16,4 +16,4 @@ def make(env_name):
     if env_name in registry:
         return registry[env_name]()
     else:
-        raise RuntimeError("Environment with name %s not registered.")
+        raise RuntimeError("Environment with name %s not registered." % env_name)

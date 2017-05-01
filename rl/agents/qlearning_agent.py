@@ -47,7 +47,7 @@ class QLearningTabularAgent(object):
 
     def print_Q(self, Q):
         for s in Q:
-            print("%d %s" % (s, str(self.Q[s])))
+            print("%s %s" % (s, str(self.Q[s])))
 
     def single_episode_train(self, env):
 #         start_time = timeit.default_timer()

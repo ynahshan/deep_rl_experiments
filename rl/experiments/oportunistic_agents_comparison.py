@@ -134,13 +134,14 @@ def train_agent(agent_name, env_name, gamma, alpha, verbosity=1):
 
 if __name__ == '__main__':
     # Prepare Agent
-    verbosity = 0  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
+    verbosity = 3  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
     envs = ['BasicGridWorld-v0', 'BasicGridWorld-v1', 'BasicGridWorld-v2', 'BasicGridWorld-v3']
-    agents = ["monte_carlo", "sarsa", "qlearning"]
+#     agents = ["monte_carlo", "sarsa", "qlearning"]
 #     agents = ["sarsa", "qlearning"]
+    agents = ["qlearning"]
     res = {}
     max_it = -1
-    env_name = envs[0]
+    env_name = envs[1]
     for agent in agents:
         res[agent] = train_agent(agent, env_name, gamma=GAMMA, alpha=ALPHA, verbosity=verbosity)
         if res[agent][1] > max_it:

@@ -97,12 +97,12 @@ def train_agent(agent_name, env_type, gamma, alpha, verbosity=1):
 
 if __name__ == '__main__':
     # Prepare Agent
-    verbosity = 0  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
-    env_type = EnvironmentFactory.EnvironmentType.RandomPlayer
+    verbosity = 3  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
+    env_type = EnvironmentFactory.EnvironmentType.RandomPlayerAndGoal
 #     agents = ["policy_it", "monte_carlo", "sarsa", "qlearning"]
-    agents = ["monte_carlo", "sarsa", "qlearning"]
+#     agents = ["monte_carlo", "sarsa", "qlearning"]
 #     agents = ["sarsa", "qlearning"]
-#     agents = ["monte_carlo"]
+    agents = ["qlearning"]
 
     res = {}
     max_it = -1
