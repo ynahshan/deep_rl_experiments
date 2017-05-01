@@ -10,10 +10,10 @@ import numpy as np
 
 from rl.agents.monte_carlo_agent import MonteCarloTabularAgent
 from rl.agents.sarsa_agent import SarsaTabularAgent
-from rl.agents.qlearning_agent import QLearningTabularAgent, QLearningRbfRegressorAgent
+from rl.agents.qlearning_agent import QLearningTabularAgent, QLearningFunctionAproximationAgent
 
 from rl.environments import gym_like as gym
-
+from rl.models.linear_models import RbfRegressor
 from rl.environments.grid_world import GridWorldSolver, EnvironmentFactory, EnvironmentBase
 
 GAMMA = 0.7
@@ -36,7 +36,7 @@ def create_agent(env, agent_type, gamma, alpha, verbosity=0):
     elif agent_type == "qlearning":
         agent = QLearningTabularAgent(gamma=gamma, alpha=alpha, env_descriptor=EnvDescriptor(), verbose=verbosity >= 2)
     elif agent_type == "qlearning_rbf":
-        agent = QLearningRbfRegressorAgent(env, gamma=gamma, alpha=alpha, env_descriptor=EnvDescriptor(), verbose=verbosity >= 2)
+        agent = QLearningFunctionAproximationAgent(RbfRegressor(env.action_space.n, env), gamma=gamma, alpha=alpha, env_descriptor=EnvDescriptor(), verbose=verbosity >= 2)
         
     return agent
 
