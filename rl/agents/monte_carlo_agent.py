@@ -146,7 +146,7 @@ class MonteCarloTabularAgent(object):
         if verbosity >= 1:
             print("Updating Value function. Policy improvement.")
         
-        total_steps = 0
+        steps = 0
 #         returns = {}
         for i in states:
             if i % 1000 == 0 and verbosity <= 1:
@@ -157,11 +157,12 @@ class MonteCarloTabularAgent(object):
             env = env_factory.create_environment()
             # V(s) has only value if it's not a terminal state 
             if env != None:
-                steps = self.single_episode_train(env)
-                total_steps += steps
+                if self.verbose:
+                    print("Epoch %d." % i)
+                steps += self.single_episode_train(env)
                     
         print()
-        return total_steps
+        return steps
 
     '''
     Interface method

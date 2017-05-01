@@ -143,6 +143,8 @@ class SarsaTabularAgent(object):
             env = env_factory.create_environment()
             # V(s) has only value if it's not a terminal state 
             if env != None:
+                if self.verbose:
+                    print("Epoch %d." % i)
                 steps += self.single_episode_train(env)
                     
         print()

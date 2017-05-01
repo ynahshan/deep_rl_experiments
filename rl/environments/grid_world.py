@@ -120,6 +120,9 @@ class EnvironmentBase(object):
         player_pos = self.player_abs_from_state(self.state)
         return player_pos == self.pit or player_pos == self.goal
     
+    def render(self):
+        self.show()
+    
     # Simulate reset to match openai gym api
     def reset(self):
         return self.state
@@ -480,15 +483,16 @@ class GridWorldSolver:
             print(" steps: %d" % steps)
         return steps
     
-    def solve_world(self, env, max_steps=10000):
+    def solve_world(self, env, star_state, max_steps=10000):
         actions = []
         steps = 0
         done = False
         total_reward = 0
+        s = star_state
         while not done:
-            next_move = self.agent.optimal_action(env.state, env.action_space.n)
+            next_move = self.agent.optimal_action(s, env.action_space.n)
             # make the move
-            _, r, done, _ = env.step(next_move)
+            s, r, done, _ = env.step(next_move)
             total_reward += r
             actions.append(Action.to_string(next_move))
             steps += 1
@@ -497,7 +501,7 @@ class GridWorldSolver:
             
         return actions, total_reward, r
     
-    def evaluate(self, states, verbosity=0):
+    def evaluate(self, states, env_wrapper = None, verbosity=0):
         if verbosity >= 2:
             print("Evaluating agent for %d iterations." % len(states))
             start_time = timeit.default_timer()
@@ -514,8 +518,12 @@ class GridWorldSolver:
             if verbosity >= 3:
                 print()
                 env.show()
-                
-            path, total_reward, last_action_reward = self.solve_world(env, max_steps=env.grid_size)
+            
+            if env_wrapper != None:
+                env_wrapper._env = env
+                path, total_reward, last_action_reward = self.solve_world(env_wrapper, env_wrapper.state(), max_steps=env.grid_size)
+            else:
+                path, total_reward, last_action_reward = self.solve_world(env, env.state, max_steps=env.grid_size)
             
             if verbosity >= 3 or (verbosity >= 2 and last_action_reward != REWARD_GOAL):
                 if last_action_reward != REWARD_GOAL:
@@ -523,7 +531,10 @@ class GridWorldSolver:
                 else:
                     print("Passed environment:")
                 env = self.env_factory.create_environment(states[i])
-                env.show()
+                if env_wrapper != None:
+                    env_wrapper._env = env
+                    env = env_wrapper
+                env.render()
                 self.agent.display_functions(env)
                 print("Agent path")
                 print(path)

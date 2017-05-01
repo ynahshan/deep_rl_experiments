@@ -46,7 +46,7 @@ class QLearningTabularAgent(object):
         return next_move
 
     def print_Q(self, Q):
-        for s in Q:
+        for s in sorted(Q):
             print("%s %s" % (s, str(self.Q[s])))
 
     def single_episode_train(self, env):
@@ -127,9 +127,6 @@ class QLearningTabularAgent(object):
     Interface method
     '''
     def single_iteration_train(self, env_factory, states, verbosity=0):
-        if verbosity >= 1:
-            print("Updating Value function. Policy improvement.")
-        
         steps = 0
         for i in states:
             if i % 1000 == 0 and verbosity <= 1:
@@ -140,6 +137,8 @@ class QLearningTabularAgent(object):
             env = env_factory.create_environment()
             # V(s) has only value if it's not a terminal state 
             if env != None:
+                if self.verbose:
+                    print("Epoch %d." % i)
                 steps += self.single_episode_train(env)
                     
         print()

@@ -64,7 +64,7 @@ def train_agent(agent_name, env_type, gamma, alpha, verbosity=1):
         steps = solver.train(range(env.num_states), verbosity)
         total_steps += steps
         print("[%d] Evaluate agent to test convergence" % total_iterations)
-        res = solver.evaluate(range(env.num_states), verbosity)
+        res = solver.evaluate(range(env.num_states), verbosity=verbosity)
         print("Reward: %f" % res)
         rewards.append(res.mean())
         if res.max() == REWARD_GOAL:
@@ -97,12 +97,12 @@ def train_agent(agent_name, env_type, gamma, alpha, verbosity=1):
 
 if __name__ == '__main__':
     # Prepare Agent
-    verbosity = 3  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
+    verbosity = 0  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
     env_type = EnvironmentFactory.EnvironmentType.RandomPlayerAndGoal
 #     agents = ["policy_it", "monte_carlo", "sarsa", "qlearning"]
-#     agents = ["monte_carlo", "sarsa", "qlearning"]
+    agents = ["monte_carlo", "sarsa", "qlearning"]
 #     agents = ["sarsa", "qlearning"]
-    agents = ["qlearning"]
+#     agents = ["qlearning"]
 
     res = {}
     max_it = -1
