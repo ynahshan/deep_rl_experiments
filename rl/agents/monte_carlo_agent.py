@@ -21,6 +21,9 @@ class MonteCarloTabularAgent(object):
         self.verbose = verbose
         self.env_descriptor = env_descriptor
 
+    def adjust(self):
+        pass
+
     def choose_action(self, env, s):
         # choose an action based on epsilon-greedy strategy
         r = np.random.rand()

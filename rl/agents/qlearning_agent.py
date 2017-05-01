@@ -115,6 +115,9 @@ class QLearningTabularAgent(object):
 #         self.policy = model.reshape(2, int(model.size / 2))[1]
         pass
 
+    def adjust(self):
+        pass
+
     '''
     Interface method
     '''    
@@ -153,3 +156,132 @@ class QLearningTabularAgent(object):
         else:
             # if we didn't seen this state before just return rundom_action
             return np.random.choice(action_space)
+
+# from sklearn.linear_model import SGDRegressor
+from sklearn.pipeline import FeatureUnion
+from sklearn.kernel_approximation import RBFSampler
+
+class SGDRegressor:
+    def __init__(self, D):
+        self.w = np.random.randn(D) / np.sqrt(D)
+        self.lr = 10e-2
+
+    def partial_fit(self, X, Y):
+        self.w += self.lr*(Y - X.dot(self.w)).dot(X)
+
+    def predict(self, X):
+        return X.dot(self.w)
+
+class RbfRegressor(object):
+    def __init__(self, output_size, env):
+        self.models = []
+        n_cmp = 10
+
+        self.rbfs = FeatureUnion([
+            # ("rbf1", RBFSampler(gamma=0.05, n_components=n_cmp)),
+            ("rbf2", RBFSampler(gamma=0.1, n_components=n_cmp)),
+            ("rbf3", RBFSampler(gamma=0.5, n_components=n_cmp)),
+            ("rbf4", RBFSampler(gamma=1.0, n_components=n_cmp)),
+            ("rbf5", RBFSampler(gamma=1.5, n_components=n_cmp)),
+            # ("rbf6", RBFSampler(gamma=2.0, n_components=n_cmp))
+        ])
+
+        observation_examples = np.array([env.observation_space.sample() for x in range(1000)])
+        if observation_examples.ndim == 1:
+            observation_examples = observation_examples.reshape((observation_examples.shape[0], 1))
+        feature_examples = self.rbfs.fit_transform(np.atleast_2d(observation_examples))
+        self.dimensions = feature_examples.shape[1]
+        for _ in range(output_size):
+            reg = SGDRegressor(self.dimensions)
+            self.models.append(reg)
+
+    def predict(self, s):
+        temp = np.atleast_2d(np.array(s))
+        X = self.rbfs.transform(temp)
+        res = np.array([m.predict(X)[0] for m in self.models])
+        return res
+
+    def update(self, s, a, G):
+        temp = np.atleast_2d(np.array(s))
+        X = self.rbfs.transform(temp)
+        self.models[a].partial_fit(X, [G])
+
+class QLearningRbfRegressorAgent(object):
+    def __init__(self, env, eps=1.0, gamma=0.9, alpha=0.1, env_descriptor = None, verbose=False):
+        self.eps = eps
+        self.gamma = gamma
+        self.alpha = alpha
+        self.epoch = 0
+        self.random_actions = 0
+        self.greedy_actions = 0
+        self.verbose = verbose
+        self.update_counts_sa = {}
+        self.env_descriptor = env_descriptor
+        self.model = RbfRegressor(env.action_space.n, env)
+
+    def adjust(self):
+        for m in self.model.models:
+            m.lr /= 2
+
+    def choose_action(self, env, s):
+        # choose an action based on epsilon-greedy strategy
+        r = np.random.rand()
+        eps = float(self.eps) / (self.epoch + 1)
+        if r < eps:
+            # take a random action
+            next_move = env.action_space.sample()
+            self.random_actions += 1
+            if self.verbose:
+                if self.env_descriptor != None:
+                    print("Taking a random action " + self.env_descriptor.action_to_str(next_move))
+                print("epsilon: %r < %f" % (r, eps))
+        else:
+            # choose the best action based on current values of states
+            # loop through all possible moves, get their values
+            # keep track of the best value
+            self.greedy_actions += 1
+            next_move = np.argmax(self.model.predict(s))
+            if self.verbose:
+                if self.env_descriptor != None:
+                    print("Taking a greedy action " + self.env_descriptor.action_to_str(next_move))
+
+        return next_move
+
+    def single_episode_train(self, env):
+        steps = 0
+        done = False
+        s = env.reset()
+        while not done:
+            # epsilon greedy action selection
+            a = self.choose_action(env, s)
+            s2, r, done, _ = env.step(a)
+
+            # if s not in self.update_counts_sa:
+            #     self.update_counts_sa[s] = np.ones(env.action_space.n)
+
+            # alpha = self.alpha / self.update_counts_sa[s][a]
+            # self.update_counts_sa[s][a] += 0.005
+            next = self.model.predict(s2)
+            G = r + self.gamma * np.max(next)
+            self.model.update(s, a, G)
+
+            steps += 1
+            # Increase epsilon as workaround to stacking in infinite actions chain
+            if self.env_descriptor != None and steps > self.env_descriptor.episod_limit and self.epoch > 1:
+                self.epoch /= 2
+
+            s = s2
+
+        # if self.verbose:
+        #     print("\nEpisode finished with reward %f" % r)
+        #     print("Q table:")
+        #     self.print_Q(self.Q)
+        #     print()
+        self.epoch += 1
+        return steps
+
+    '''
+    Interface method
+    '''
+    def optimal_action(self, s, action_space):
+        return np.argmax(self.model.predict(s))

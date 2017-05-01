@@ -21,6 +21,9 @@ class SarsaTabularAgent(object):
         self.update_counts_sa = {}
         self.env_descriptor = env_descriptor
 
+    def adjust(self):
+        pass
+
     def choose_action(self, env, s):
         # choose an action based on epsilon-greedy strategy
         r = np.random.rand()

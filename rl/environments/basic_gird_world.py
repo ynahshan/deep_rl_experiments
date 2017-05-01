@@ -14,6 +14,13 @@ class ActionSpace(object):
     def sample(self):
         return np.random.choice(self.n)
 
+class ObservationSpace(object):
+    def __init__(self, env):
+        self.env = env
+
+    def sample(self):
+        return self.env._obs_sample()
+
 class GridWorldBase(object):
     def __init__(self):
         '''
@@ -21,6 +28,7 @@ class GridWorldBase(object):
         '''
         self._env = None
         self.action_space = ActionSpace(4)
+        self.observation_space = ObservationSpace(self)
     
     def render(self):
         self._env.show()
@@ -97,6 +105,9 @@ class BasicGridWorld_v0(GridWorldBase):
     
     def state(self):
         return self._env.player
+
+    def _obs_sample(self):
+        return np.random.choice(RandomPlayerEnvironment.grid_size)
     
 class BasicGridWorld_v1(GridWorldBase):
     name = 'BasicGridWorld-v1'
@@ -119,3 +130,6 @@ class BasicGridWorld_v1(GridWorldBase):
     
     def state(self):
         return (self._env.player, self._env.goal)
+
+    def _obs_sample(self):
+        return (np.random.choice(RandomGoalAndPlayerEnvironment.grid_size), np.random.choice(RandomGoalAndPlayerEnvironment.grid_size))

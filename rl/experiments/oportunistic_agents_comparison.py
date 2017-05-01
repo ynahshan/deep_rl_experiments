@@ -10,7 +10,7 @@ import numpy as np
 
 from rl.agents.monte_carlo_agent import MonteCarloTabularAgent
 from rl.agents.sarsa_agent import SarsaTabularAgent
-from rl.agents.qlearning_agent import QLearningTabularAgent
+from rl.agents.qlearning_agent import QLearningTabularAgent, QLearningRbfRegressorAgent
 
 from rl.environments import gym_like as gym
 
@@ -35,6 +35,8 @@ def create_agent(env, agent_type, gamma, alpha, verbosity=0):
         agent = SarsaTabularAgent(gamma=gamma, alpha=alpha, env_descriptor=EnvDescriptor(), verbose=verbosity >= 2)
     elif agent_type == "qlearning":
         agent = QLearningTabularAgent(gamma=gamma, alpha=alpha, env_descriptor=EnvDescriptor(), verbose=verbosity >= 2)
+    elif agent_type == "qlearning_rbf":
+        agent = QLearningRbfRegressorAgent(env, gamma=gamma, alpha=alpha, env_descriptor=EnvDescriptor(), verbose=verbosity >= 2)
         
     return agent
 
@@ -93,8 +95,9 @@ def train_agent(agent_name, env_name, gamma, alpha, verbosity=1):
     total_steps = 0
     total_iterations = 0
     convergence_count = 0
-    CONVERGENCE_LIMIT = 10e-4
+    CONVERGENCE_LIMIT = 10e-3
     CONVERGENCE_STOP_COUNT = 2
+    MAX_ITER = 10
 
     train_iter = iters
     eval_iter = iters
@@ -119,7 +122,10 @@ def train_agent(agent_name, env_name, gamma, alpha, verbosity=1):
         if verbosity >= 0:
             print()
         total_iterations += 1
-#         break
+        if total_iterations % 2 == 0:
+            agent.adjust()
+        if total_iterations > MAX_ITER:
+            break
     
     elapsed = timeit.default_timer() - start_time
     
@@ -138,12 +144,12 @@ if __name__ == '__main__':
     # Prepare Agent
     verbosity = 0  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
     envs = ['BasicGridWorld-v0', 'BasicGridWorld-v1', 'BasicGridWorld-v2', 'BasicGridWorld-v3']
-    agents = ["monte_carlo", "sarsa", "qlearning"]
+    # agents = ["monte_carlo", "sarsa", "qlearning", "qlearning_rbf"]
 #     agents = ["sarsa", "qlearning"]
-#     agents = ["qlearning"]
+    agents = ["qlearning_rbf", "qlearning"]
     res = {}
     max_it = -1
-    env_name = envs[1]
+    env_name = envs[0]
     for agent in agents:
         res[agent] = train_agent(agent, env_name, gamma=GAMMA, alpha=ALPHA, verbosity=verbosity)
         if res[agent][1] > max_it:
