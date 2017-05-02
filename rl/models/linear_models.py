@@ -16,27 +16,33 @@ class SGDRegressor:
         return X.dot(self.w)
 
 class RbfRegressor(object):
-    def __init__(self, output_size, env):
+    def __init__(self, in_size, num_features, output_size):
         self.models = []
-        n_cmp = 10
-
         self.rbfs = FeatureUnion([
-            # ("rbf1", RBFSampler(gamma=0.05, n_components=n_cmp)),
-            ("rbf2", RBFSampler(gamma=0.1, n_components=n_cmp)),
-            ("rbf3", RBFSampler(gamma=0.5, n_components=n_cmp)),
-            ("rbf4", RBFSampler(gamma=1.0, n_components=n_cmp)),
-            ("rbf5", RBFSampler(gamma=1.5, n_components=n_cmp)),
-            # ("rbf6", RBFSampler(gamma=2.0, n_components=n_cmp))
+            # ("rbf1", RBFSampler(gamma=0.05, n_components=num_components)),
+            ("rbf2", RBFSampler(gamma=0.1, n_components=num_features)),
+            ("rbf3", RBFSampler(gamma=0.5, n_components=num_features)),
+            ("rbf4", RBFSampler(gamma=1.0, n_components=num_features)),
+            ("rbf5", RBFSampler(gamma=1.5, n_components=num_features)),
+            # ("rbf6", RBFSampler(gamma=2.0, n_components=num_components))
         ])
 
-        observation_examples = np.array([env.observation_space.sample() for x in range(100)])
+        # observation_examples = np.array([env.observation_space.sample() for x in range(100)])
+        observation_examples = np.zeros(in_size)
         if observation_examples.ndim == 1:
             observation_examples = observation_examples.reshape((observation_examples.shape[0], 1))
         feature_examples = self.rbfs.fit_transform(np.atleast_2d(observation_examples))
         self.dimensions = feature_examples.shape[1]
+
         for _ in range(output_size):
             reg = SGDRegressor(self.dimensions)
             self.models.append(reg)
+
+    def fit_features(self, observations):
+        # observation_examples = np.array([env.observation_space.sample() for x in range(100)])
+        if observations.ndim == 1:
+            observations = observations.reshape((observations.shape[0], 1))
+        self.rbfs.fit(np.atleast_2d(observations))
 
     def predict(self, s):
         temp = np.atleast_2d(np.array(s))

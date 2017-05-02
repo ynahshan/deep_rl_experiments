@@ -13,9 +13,8 @@ if __name__ == '__main__':
     print(env.reset())
     
     env.render()
-    
+    env_name = 'Some_not_existing_environment'
     try:
-        env_name = 'Some_not_existing_environment'
         env = gym.make(env_name)
     except:
         print("%s doesn't exist as expected" % env_name)

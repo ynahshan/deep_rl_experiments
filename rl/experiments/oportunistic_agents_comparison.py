@@ -22,6 +22,14 @@ ALPHA = 0.8
 REWARD_GOAL = 10
 np.random.seed(0)
 
+def create_model(env):
+    obs = np.array([env.observation_space.sample()])
+    obs_dim = obs.ndim
+    observation_examples = np.array([env.observation_space.sample() for x in range(100)])
+    model = RbfRegressor(in_size=obs_dim, num_features=10, output_size=env.action_space.n)
+    model.fit_features(observation_examples)
+    return model
+
 def create_agent(env, agent_type, gamma, alpha, verbosity=0):
     class EnvDescriptor(object):
         def __init__(self):
@@ -36,7 +44,8 @@ def create_agent(env, agent_type, gamma, alpha, verbosity=0):
     elif agent_type == "qlearning":
         agent = QLearningTabularAgent(gamma=gamma, alpha=alpha, env_descriptor=EnvDescriptor(), verbose=verbosity >= 2)
     elif agent_type == "qlearning_rbf":
-        agent = QLearningFunctionAproximationAgent(RbfRegressor(env.action_space.n, env), gamma=gamma, alpha=alpha, env_descriptor=EnvDescriptor(), verbose=verbosity >= 2)
+        model = create_model(env)
+        agent = QLearningFunctionAproximationAgent(model=model, gamma=gamma, alpha=alpha, env_descriptor=EnvDescriptor(), verbose=verbosity >= 2)
         
     return agent
 

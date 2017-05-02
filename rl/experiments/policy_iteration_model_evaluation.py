@@ -1,14 +1,13 @@
-'''
+"""
 Created on Apr 22, 2017
 
-@author: Yury
-'''
+@author: yn
+"""
 
 import numpy as np
 
-from simple_value_table_agent import SimpleValueTableAgent
-from policy_iteration_agent import PolicyIterationAgent
-from grid_world import GridWorldSolver, EnvironmentFactory, REWARD_GOAL
+from rl.agents.policy_iteration_agent import PolicyIterationAgent
+from rl.environments.grid_world import GridWorldSolver, EnvironmentFactory, REWARD_GOAL
 
 if __name__ == '__main__':
     verbosity = 2  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
