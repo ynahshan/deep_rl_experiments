@@ -32,7 +32,7 @@ if __name__ == '__main__':
     verbose = False
     model = create_model(env, verbose=verbose)
     gamma = 0.99
-    agent = QLearningFunctionAproximationAgent(model=model, eps=0.2, gamma=gamma, env_descriptor=EnvDescriptor(), verbose=verbose)
+    agent = QLearningFunctionAproximationAgent(model=model, eps=0.2, gamma=gamma, verbose=verbose)
 
     monitor = True
     if monitor:
