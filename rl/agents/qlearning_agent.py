@@ -59,6 +59,7 @@ class QLearningTabularAgent(object):
         # the value for the terminal state is by definition 0, so we don't
         # care about updating it.
         done = False
+        total_return = 0
         s = env.reset()
         while not done:
             if s not in self.Q:
@@ -66,6 +67,7 @@ class QLearningTabularAgent(object):
             # epsilon greedy action selection
             a = self.choose_action(env, s)
             s2, r, done, _ = env.step(a)
+            total_return+=r
 
             if s2 not in self.Q:
                 self.Q[s2] = np.zeros(env.action_space.n)
@@ -97,7 +99,7 @@ class QLearningTabularAgent(object):
 #             print("Time to solve grid %.3f[ms]" % (elapsed * 1000))
 #             print("Random actions %d, greedy actions %d" % (self.random_actions, self.greedy_actions))
 
-        return steps
+        return steps, total_return, r
             
     def display_functions(self, env):
         policy = {}

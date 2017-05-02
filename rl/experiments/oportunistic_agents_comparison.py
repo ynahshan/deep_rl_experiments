@@ -26,8 +26,8 @@ def create_model(env):
     obs = np.array([env.observation_space.sample()])
     obs_dim = obs.ndim
     observation_examples = np.array([env.observation_space.sample() for x in range(100)])
-    model = RbfRegressor(in_size=obs_dim, num_features=10, output_size=env.action_space.n)
-    model.fit_features(observation_examples)
+    model = RbfRegressor(in_size=obs_dim, num_features=50, output_size=env.action_space.n, gammmas=[2.0, 1.5, 1.0, 0.5], normalize=False)
+    model.fit_features(observation_examples, env)
     return model
 
 def create_agent(env, agent_type, gamma, alpha, verbosity=0):
@@ -45,7 +45,7 @@ def create_agent(env, agent_type, gamma, alpha, verbosity=0):
         agent = QLearningTabularAgent(gamma=gamma, alpha=alpha, env_descriptor=EnvDescriptor(), verbose=verbosity >= 2)
     elif agent_type == "qlearning_rbf":
         model = create_model(env)
-        agent = QLearningFunctionAproximationAgent(model=model, gamma=gamma, alpha=alpha, env_descriptor=EnvDescriptor(), verbose=verbosity >= 2)
+        agent = QLearningFunctionAproximationAgent(model=model, gamma=gamma, verbose=verbosity >= 2)
         
     return agent
 
@@ -75,7 +75,8 @@ def train(agent, env, num_iter, verbosity=0):
     for i in range(num_iter):
         if verbosity >= 2:
             print("Epoch %d." % i)
-        steps += agent.single_episode_train(env)
+        stps, total_return, r = agent.single_episode_train(env)
+        steps += stps
 
     if verbosity >= 1:
         elapsed = timeit.default_timer() - start_time
@@ -131,8 +132,8 @@ def train_agent(agent_name, env_name, gamma, alpha, verbosity=1):
         if verbosity >= 0:
             print()
         total_iterations += 1
-        if total_iterations % 2 == 0:
-            agent.adjust()
+        # if total_iterations % 2 == 0:
+        #     agent.adjust()
         if total_iterations > MAX_ITER:
             break
     
@@ -153,9 +154,9 @@ if __name__ == '__main__':
     # Prepare Agent
     verbosity = 0  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
     envs = ['BasicGridWorld-v0', 'BasicGridWorld-v1', 'BasicGridWorld-v2', 'BasicGridWorld-v3']
-    # agents = ["monte_carlo", "sarsa", "qlearning", "qlearning_rbf"]
+    agents = ["monte_carlo", "sarsa", "qlearning", "qlearning_rbf"]
 #     agents = ["sarsa", "qlearning"]
-    agents = ["qlearning_rbf", "qlearning"]
+#     agents = ["qlearning_rbf"]
     res = {}
     max_it = -1
     env_name = envs[0]

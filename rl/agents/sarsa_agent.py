@@ -56,6 +56,7 @@ class SarsaTabularAgent(object):
 #         start_time = timeit.default_timer()
         # loops until grid is solved
         steps = 0
+        total_return = 0
         # the first (s, r) tuple is the state we start in and 0
         # (since we don't get a reward) for simply starting the game
         # the last (s, r) tuple is the terminal state and the final reward
@@ -68,6 +69,7 @@ class SarsaTabularAgent(object):
         done = False
         while not done:
             s2, r, done, _ = env.step(a)
+            total_return += r
 
             # we need the next action as well since Q(s,a) depends on Q(s',a')
             # if s2 not in policy then it's a terminal state, all Q are 0
@@ -103,7 +105,7 @@ class SarsaTabularAgent(object):
 #             print("Time to solve grid %.3f[ms]" % (elapsed * 1000))
 #             print("Random actions %d, greedy actions %d" % (self.random_actions, self.greedy_actions))
 
-        return steps
+        return steps, total_return, r
             
     def display_functions(self, env):
         policy = {}

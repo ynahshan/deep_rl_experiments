@@ -106,6 +106,7 @@ class MonteCarloTabularAgent(object):
 #                 print(states_actions_rewards)
         # calculate the returns by working backwards from the terminal state
         G = 0
+        total_return = 0
         states_actions_returns = []
         first = True
         for s, a, r in reversed(states_actions_rewards):
@@ -140,7 +141,7 @@ class MonteCarloTabularAgent(object):
 #             env.show_policy(self.policy)
             print(self.Q)
             
-        return steps
+        return steps, total_return, 0
     
     '''
     Interface method
