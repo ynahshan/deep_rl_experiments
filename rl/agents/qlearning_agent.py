@@ -158,16 +158,15 @@ class QLearningTabularAgent(object):
             return np.random.choice(action_space)
 
 class QLearningFunctionAproximationAgent(object):
-    def __init__(self, model, eps=1.0, gamma=0.9, alpha=0.1, env_descriptor = None, verbose=False):
+    def __init__(self, model, eps=1.0, gamma=0.9, verbose=False):
         self.eps = eps
         self.gamma = gamma
-        self.alpha = alpha
         self.epoch = 0
+        self.eps_ctr = 1.0
         self.random_actions = 0
         self.greedy_actions = 0
         self.verbose = verbose
         self.update_counts_sa = {}
-        self.env_descriptor = env_descriptor
         self.model = model
 
     def adjust(self):
@@ -176,7 +175,7 @@ class QLearningFunctionAproximationAgent(object):
     def choose_action(self, env, s):
         # choose an action based on epsilon-greedy strategy
         r = np.random.rand()
-        eps = float(self.eps) / (self.epoch + 1)
+        eps = self.eps / self.eps_ctr
         if r < eps:
             # take a random action
             next_move = env.action_space.sample()
@@ -184,6 +183,8 @@ class QLearningFunctionAproximationAgent(object):
             if self.verbose:
                 if self.env_descriptor != None:
                     print("Taking a random action " + self.env_descriptor.action_to_str(next_move))
+                else:
+                    print("Taking a random action " + next_move)
                 print("epsilon: %r < %f" % (r, eps))
         else:
             # choose the best action based on current values of states
@@ -194,6 +195,8 @@ class QLearningFunctionAproximationAgent(object):
             if self.verbose:
                 if self.env_descriptor != None:
                     print("Taking a greedy action " + self.env_descriptor.action_to_str(next_move))
+                else:
+                    print("Taking a greedy action " + next_move)
 
         return next_move
 
@@ -201,11 +204,12 @@ class QLearningFunctionAproximationAgent(object):
         steps = 0
         done = False
         s = env.reset()
+        total_return = 0
         while not done:
             # epsilon greedy action selection
             a = self.choose_action(env, s)
             s2, r, done, _ = env.step(a)
-
+            total_return += r
             # if s not in self.update_counts_sa:
             #     self.update_counts_sa[s] = np.ones(env.action_space.n)
 
@@ -216,10 +220,6 @@ class QLearningFunctionAproximationAgent(object):
             self.model.update(s, a, G)
 
             steps += 1
-            # Increase epsilon as workaround to stacking in infinite actions chain
-            if self.env_descriptor != None and steps > self.env_descriptor.episod_limit and self.epoch > 1:
-                self.epoch /= 2
-
             s = s2
 
         # if self.verbose:
@@ -228,7 +228,8 @@ class QLearningFunctionAproximationAgent(object):
         #     self.print_Q(self.Q)
         #     print()
         self.epoch += 1
-        return steps
+        self.eps_ctr += 1
+        return steps, total_return, r
 
     '''
     Interface method
