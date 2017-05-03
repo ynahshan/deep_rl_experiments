@@ -1,20 +1,20 @@
-from sklearn.linear_model import SGDRegressor
+# from sklearn.linear_model import SGDRegressor
 from sklearn.pipeline import FeatureUnion
 from sklearn.kernel_approximation import RBFSampler
 from sklearn.preprocessing import StandardScaler
 
 import numpy as np
 
-# class SGDRegressor:
-#     def __init__(self, D):
-#         self.w = np.random.randn(D) / np.sqrt(D)
-#         self.lr = 10e-2
-#
-#     def partial_fit(self, X, Y):
-#         self.w += self.lr*(Y - X.dot(self.w)).dot(X)
-#
-#     def predict(self, X):
-#         return X.dot(self.w)
+class SGDRegressor:
+    def __init__(self, D):
+        self.w = np.random.randn(D) / np.sqrt(D)
+        self.lr = 10e-2
+
+    def partial_fit(self, X, Y):
+        self.w += self.lr*(Y - X.dot(self.w)).dot(X)
+
+    def predict(self, X):
+        return X.dot(self.w)
 
 class RbfRegressor(object):
     def __init__(self, in_size, num_features, output_size, gammmas, normalize = True, verbose=False):
@@ -38,8 +38,8 @@ class RbfRegressor(object):
         self.dimensions = feature_examples.shape[1]
 
         for _ in range(output_size):
-            reg = SGDRegressor(learning_rate='constant')
-            # reg = SGDRegressor(self.dimensions)
+            # reg = SGDRegressor(learning_rate='constant')
+            reg = SGDRegressor(self.dimensions)
             self.models.append(reg)
 
     def fit_features(self, observations, env):
