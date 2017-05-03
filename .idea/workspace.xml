@@ -6,11 +6,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="fe4c70fb-9297-420d-a29e-4b5f700a40ef" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/deep_rl_experiments.iml" afterPath="$PROJECT_DIR$/.idea/deep_rl_experiments.iml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/rl/agents/monte_carlo_agent.py" afterPath="$PROJECT_DIR$/rl/agents/monte_carlo_agent.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/rl/agents/qlearning_agent.py" afterPath="$PROJECT_DIR$/rl/agents/qlearning_agent.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/rl/agents/sarsa_agent.py" afterPath="$PROJECT_DIR$/rl/agents/sarsa_agent.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/rl/experiments/oportunistic_agents_comparison.py" afterPath="$PROJECT_DIR$/rl/experiments/oportunistic_agents_comparison.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -28,8 +26,8 @@
       <file leaf-file-name="oportunistic_agents_comparison.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/rl/experiments/oportunistic_agents_comparison.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="424">
-              <caret line="77" column="38" lean-forward="true" selection-start-line="77" selection-start-column="38" selection-end-line="77" selection-end-column="38" />
+            <state relative-caret-position="17">
+              <caret line="77" column="38" lean-forward="false" selection-start-line="77" selection-start-column="38" selection-end-line="77" selection-end-column="38" />
               <folding>
                 <element signature="e#46#59#0" expanded="true" />
               </folding>
@@ -66,20 +64,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="sarsa_agent.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/rl/agents/sarsa_agent.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-1141">
-              <caret line="66" column="52" lean-forward="true" selection-start-line="66" selection-start-column="52" selection-end-line="66" selection-end-column="52" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="monte_carlo_agent.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/rl/agents/monte_carlo_agent.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="459">
+            <state relative-caret-position="2397">
               <caret line="143" column="34" lean-forward="false" selection-start-line="143" selection-start-column="34" selection-end-line="143" selection-end-column="34" />
               <folding />
             </state>
@@ -89,7 +77,7 @@
       <file leaf-file-name="linear_models.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/rl/models/linear_models.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="510">
+            <state relative-caret-position="425">
               <caret line="30" column="42" lean-forward="false" selection-start-line="30" selection-start-column="42" selection-end-line="30" selection-end-column="42" />
               <folding>
                 <element signature="e#0#45#0" expanded="true" />
@@ -101,8 +89,20 @@
       <file leaf-file-name="mountain_car.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/rl/experiments/mountain_car.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="306">
-              <caret line="18" column="19" lean-forward="false" selection-start-line="18" selection-start-column="19" selection-end-line="18" selection-end-column="19" />
+            <state relative-caret-position="272">
+              <caret line="16" column="83" lean-forward="false" selection-start-line="16" selection-start-column="83" selection-end-line="16" selection-end-column="83" />
+              <folding>
+                <element signature="e#0#10#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="cart_pole.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/rl/experiments/cart_pole.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="459">
+              <caret line="57" column="28" lean-forward="true" selection-start-line="57" selection-start-column="28" selection-end-line="57" selection-end-column="28" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
@@ -141,6 +141,7 @@
         <option value="$PROJECT_DIR$/rl/agents/qlearning_agent.py" />
         <option value="$PROJECT_DIR$/rl/agents/monte_carlo_agent.py" />
         <option value="$PROJECT_DIR$/rl/agents/sarsa_agent.py" />
+        <option value="$PROJECT_DIR$/rl/experiments/cart_pole.py" />
       </list>
     </option>
   </component>
@@ -148,7 +149,7 @@
     <option name="x" value="-8" />
     <option name="y" value="-8" />
     <option name="width" value="1936" />
-    <option name="height" value="1176" />
+    <option name="height" value="1098" />
   </component>
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="1" id="Add" />
@@ -273,9 +274,9 @@
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="last_opened_file_path" value="J:/Anaconda3_4.3.0_Python3.6/envs/tensorflow/python.exe" />
-    <property name="settings.editor.selected.configurable" value="preferences.lookFeel" />
-    <property name="SearchEverywhereHistoryKey" value="generate&#9;ACTION&#9;GenerateGroup&#10;run&#9;ACTION&#9;ActivateRunToolWindow" />
+    <property name="last_opened_file_path" value="C:/Anaconda3/envs/tensorflow/python.exe" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+    <property name="SearchEverywhereHistoryKey" value="proje&#9;ACTION&#9;ActivateProjectToolWindow&#10;generate&#9;ACTION&#9;GenerateGroup&#10;run&#9;ACTION&#9;ActivateRunToolWindow" />
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
   </component>
   <component name="RunDashboard">
@@ -290,7 +291,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.oportunistic_agents_comparison">
+  <component name="RunManager" selected="Python.cart_pole">
     <configuration default="false" name="oportunistic_agents_comparison" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -340,6 +341,24 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="deep_rl_experiments" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/rl/experiments/mountain_car.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="cart_pole" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/rl/experiments" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="deep_rl_experiments" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/rl/experiments/cart_pole.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -409,16 +428,18 @@
       <option name="_new_targetType" value="&quot;PATH&quot;" />
       <method />
     </configuration>
-    <list size="3">
+    <list size="4">
       <item index="0" class="java.lang.String" itemvalue="Python.oportunistic_agents_comparison" />
       <item index="1" class="java.lang.String" itemvalue="Python.RbfFeatures" />
       <item index="2" class="java.lang.String" itemvalue="Python.mountain_car" />
+      <item index="3" class="java.lang.String" itemvalue="Python.cart_pole" />
     </list>
     <recent_temporary>
-      <list size="3">
-        <item index="0" class="java.lang.String" itemvalue="Python.oportunistic_agents_comparison" />
-        <item index="1" class="java.lang.String" itemvalue="Python.mountain_car" />
-        <item index="2" class="java.lang.String" itemvalue="Python.RbfFeatures" />
+      <list size="4">
+        <item index="0" class="java.lang.String" itemvalue="Python.cart_pole" />
+        <item index="1" class="java.lang.String" itemvalue="Python.oportunistic_agents_comparison" />
+        <item index="2" class="java.lang.String" itemvalue="Python.mountain_car" />
+        <item index="3" class="java.lang.String" itemvalue="Python.RbfFeatures" />
       </list>
     </recent_temporary>
   </component>
@@ -448,13 +469,13 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1936" height="1176" extended-state="6" />
+    <frame x="-8" y="-8" width="1936" height="1098" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.18020834" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3292683" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32896066" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -471,6 +492,27 @@
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
+    <layout-to-restore>
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3292683" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.18020834" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Inspection Results" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3292683" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39962476" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3296875" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+    </layout-to-restore>
   </component>
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
@@ -489,6 +531,42 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/rl/agents/monte_carlo_agent.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2397">
+          <caret line="143" column="34" lean-forward="false" selection-start-line="143" selection-start-column="34" selection-end-line="143" selection-end-column="34" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/rl/models/linear_models.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="425">
+          <caret line="30" column="42" lean-forward="false" selection-start-line="30" selection-start-column="42" selection-end-line="30" selection-end-column="42" />
+          <folding>
+            <element signature="e#0#45#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/rl/experiments/mountain_car.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="119">
+          <caret line="18" column="19" lean-forward="false" selection-start-line="18" selection-start-column="19" selection-end-line="18" selection-end-column="19" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/rl/agents/sarsa_agent.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1088">
+          <caret line="66" column="52" lean-forward="true" selection-start-line="66" selection-start-column="52" selection-end-line="66" selection-end-column="52" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/rl/experiments/oportunistic_agents_comparison.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2584">
@@ -718,13 +796,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://J:/Anaconda3_4.3.0_Python3.6/envs/tensorflow/Lib/codecs.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="204">
-          <caret line="308" column="0" lean-forward="false" selection-start-line="308" selection-start-column="0" selection-end-line="308" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://J:/Anaconda3_4.3.0_Python3.6/envs/tensorflow/Lib/codecs.py" />
     <entry file="file://$PROJECT_DIR$/rl/environments/grid_world.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="926">
@@ -748,13 +820,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://J:/Anaconda3_4.3.0_Python3.6/envs/tensorflow/Lib/site-packages/sklearn/utils/validation.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="229">
-          <caret line="428" column="39" lean-forward="false" selection-start-line="428" selection-start-column="39" selection-end-line="428" selection-end-column="39" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://J:/Anaconda3_4.3.0_Python3.6/envs/tensorflow/Lib/site-packages/sklearn/utils/validation.py" />
     <entry file="file://$PROJECT_DIR$/rl/agents/qlearning_agent.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-34">
@@ -873,13 +939,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://J:/Anaconda3_4.3.0_Python3.6/envs/tensorflow/Lib/codecs.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="204">
-          <caret line="308" column="0" lean-forward="false" selection-start-line="308" selection-start-column="0" selection-end-line="308" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://J:/Anaconda3_4.3.0_Python3.6/envs/tensorflow/Lib/codecs.py" />
     <entry file="file://$PROJECT_DIR$/rl/environments/grid_world.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="926">
@@ -894,13 +954,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://J:/Anaconda3_4.3.0_Python3.6/envs/tensorflow/Lib/site-packages/sklearn/utils/extmath.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="221">
-          <caret line="189" column="0" lean-forward="true" selection-start-line="189" selection-start-column="0" selection-end-line="189" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://J:/Anaconda3_4.3.0_Python3.6/envs/tensorflow/Lib/site-packages/sklearn/utils/extmath.py" />
     <entry file="file://$PROJECT_DIR$/rl/experiments/policy_iteration_model_evaluation.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="119">
@@ -925,16 +979,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://J:/Anaconda3_4.3.0_Python3.6/envs/tensorflow/Lib/site-packages/gym/wrappers/monitoring.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="136">
-          <caret line="14" column="30" lean-forward="false" selection-start-line="14" selection-start-column="30" selection-end-line="14" selection-end-column="30" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://J:/Anaconda3_4.3.0_Python3.6/envs/tensorflow/Lib/site-packages/gym/wrappers/monitoring.py" />
     <entry file="file://$PROJECT_DIR$/rl/models/linear_models.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="510">
+        <state relative-caret-position="425">
           <caret line="30" column="42" lean-forward="false" selection-start-line="30" selection-start-column="42" selection-end-line="30" selection-end-column="42" />
           <folding>
             <element signature="e#0#45#0" expanded="true" />
@@ -942,31 +990,20 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/rl/experiments/mountain_car.py">
+    <entry file="file://J:/Anaconda3_4.3.0_Python3.6/envs/tensorflow/Lib/site-packages/sklearn/utils/validation.py" />
+    <entry file="file://$PROJECT_DIR$/rl/agents/monte_carlo_agent.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="306">
-          <caret line="18" column="19" lean-forward="false" selection-start-line="18" selection-start-column="19" selection-end-line="18" selection-end-column="19" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://J:/Anaconda3_4.3.0_Python3.6/envs/tensorflow/Lib/site-packages/sklearn/utils/validation.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="229">
-          <caret line="428" column="0" lean-forward="false" selection-start-line="428" selection-start-column="0" selection-end-line="428" selection-end-column="0" />
+        <state relative-caret-position="2397">
+          <caret line="143" column="34" lean-forward="false" selection-start-line="143" selection-start-column="34" selection-end-line="143" selection-end-column="34" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/rl/experiments/oportunistic_agents_comparison.py">
+    <entry file="file://$PROJECT_DIR$/rl/agents/sarsa_agent.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="424">
-          <caret line="77" column="38" lean-forward="true" selection-start-line="77" selection-start-column="38" selection-end-line="77" selection-end-column="38" />
-          <folding>
-            <element signature="e#46#59#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="170">
+          <caret line="75" column="32" lean-forward="true" selection-start-line="75" selection-start-column="32" selection-end-line="75" selection-end-column="32" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -997,19 +1034,33 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/rl/agents/monte_carlo_agent.py">
+    <entry file="file://$PROJECT_DIR$/rl/experiments/oportunistic_agents_comparison.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="459">
-          <caret line="143" column="34" lean-forward="false" selection-start-line="143" selection-start-column="34" selection-end-line="143" selection-end-column="34" />
-          <folding />
+        <state relative-caret-position="17">
+          <caret line="77" column="38" lean-forward="false" selection-start-line="77" selection-start-column="38" selection-end-line="77" selection-end-column="38" />
+          <folding>
+            <element signature="e#46#59#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/rl/agents/sarsa_agent.py">
+    <entry file="file://$PROJECT_DIR$/rl/experiments/mountain_car.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1141">
-          <caret line="66" column="52" lean-forward="true" selection-start-line="66" selection-start-column="52" selection-end-line="66" selection-end-column="52" />
-          <folding />
+        <state relative-caret-position="272">
+          <caret line="16" column="83" lean-forward="false" selection-start-line="16" selection-start-column="83" selection-end-line="16" selection-end-column="83" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/rl/experiments/cart_pole.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="459">
+          <caret line="57" column="28" lean-forward="true" selection-start-line="57" selection-start-column="28" selection-end-line="57" selection-end-column="28" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
