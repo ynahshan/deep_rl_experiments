@@ -7,18 +7,23 @@ from gym import wrappers
 from datetime import datetime
 
 from rl.models.linear_models import RbfRegressor
+from rl.models.mlp_models import FeedForwardModel
 from rl.agents.qlearning_agent import QLearningFunctionAproximationAgent
 
 import matplotlib.pyplot as plt
 
-def create_model(env, verbose=False):
-    obs = np.array([env.observation_space.sample()])
-    obs_dim = obs.ndim
-    # observation_examples = np.array([env.observation_space.sample() for x in range(10000)])
-    # NOTE!! state samples are poor, b/c you get velocities --> infinity
-    observation_examples = np.random.random((20000, 4)) * 2 - 1
-    model = RbfRegressor(in_size=obs_dim, num_features=1000, output_size=env.action_space.n, gammmas=[1.0, 0.5, 0.1, 0.05], verbose=verbose)
-    model.fit_features(observation_examples, env)
+def create_model(env, model_name, verbose=False):
+    obs = env.reset()
+    obs_dim = len(obs)
+    if model_name == 'rbf':
+        # observation_examples = np.array([env.observation_space.sample() for x in range(10000)])
+        # NOTE!! state samples are poor, b/c you get velocities --> infinity
+        observation_examples = np.random.random((20000, 4)) * 2 - 1
+        model = RbfRegressor(in_size=obs_dim, num_features=1000, output_size=env.action_space.n, gammmas=[1.0, 0.5, 0.1, 0.05], verbose=verbose)
+        model.fit_features(observation_examples, env)
+    elif model_name == 'ff':
+        model = FeedForwardModel(in_size=obs_dim, out_sizes=[100, 100, env.action_space.n], verbose=verbose)
+
     return model
 
 np.random.seed(0)
@@ -26,7 +31,8 @@ if __name__ == '__main__':
     env = gym.make('CartPole-v0')
     env.seed(0)
     verbose = False
-    model = create_model(env, verbose=verbose)
+    models = ['rbf', 'ff']
+    model = create_model(env, models[1], verbose=verbose)
     gamma = 0.99
     agent = QLearningFunctionAproximationAgent(model=model, eps=1.0, gamma=gamma, verbose=verbose)
 
@@ -37,7 +43,7 @@ if __name__ == '__main__':
         monitor_dir = os.path.join(monitor_dir, os.pardir, os.pardir, os.pardir, 'temp')
         env = wrappers.Monitor(env, monitor_dir, force=True)
 
-    num_iter = 500
+    num_iter = 300
     total_steps = 0
     returns = []
     for i in range(num_iter):

@@ -183,10 +183,7 @@ class QLearningFunctionAproximationAgent(object):
             next_move = env.action_space.sample()
             self.random_actions += 1
             if self.verbose:
-                if self.env_descriptor != None:
-                    print("Taking a random action " + self.env_descriptor.action_to_str(next_move))
-                else:
-                    print("Taking a random action " + next_move)
+                print("Taking a random action %s" % next_move)
                 print("epsilon: %r < %f" % (r, eps))
         else:
             # choose the best action based on current values of states
@@ -195,10 +192,7 @@ class QLearningFunctionAproximationAgent(object):
             self.greedy_actions += 1
             next_move = np.argmax(self.model.predict(s))
             if self.verbose:
-                if self.env_descriptor != None:
-                    print("Taking a greedy action " + self.env_descriptor.action_to_str(next_move))
-                else:
-                    print("Taking a greedy action " + next_move)
+                print("Taking a greedy action %s" % next_move)
 
         return next_move
 
@@ -217,9 +211,10 @@ class QLearningFunctionAproximationAgent(object):
 
             # alpha = self.alpha / self.update_counts_sa[s][a]
             # self.update_counts_sa[s][a] += 0.005
-            next = self.model.predict(s2)
-            G = r + self.gamma * np.max(next)
-            self.model.update(s, a, G)
+            y = self.model.predict(s2)
+            G = r + self.gamma * np.max(y)
+            y[a] = G
+            self.model.update(s, a, y)
 
             steps += 1
             s = s2

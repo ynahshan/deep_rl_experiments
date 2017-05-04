@@ -71,13 +71,13 @@ class RbfRegressor(object):
             print("predict res: %s" % res)
         return res
 
-    def update(self, s, a, G):
+    def update(self, s, a, y):
         s = np.atleast_2d([s])
         if self.normalize:
             s = self.scaler.transform(s)
 
         X = self.rbfs.transform(s)
-        self.models[a].partial_fit(X, [G])
+        self.models[a].partial_fit(X, [y[a]])
 
     # def adjust(self):
     #     for m in self.models:
