@@ -21,10 +21,14 @@ def create_model(env, model_name, verbose=False):
         observation_examples = np.random.random((20000, 4)) * 2 - 1
         model = RbfRegressor(in_size=obs_dim, num_features=1000, output_size=env.action_space.n, gammmas=[1.0, 0.5, 0.1, 0.05], verbose=verbose)
         model.fit_features(observation_examples, env)
+        gamma = 0.99
     elif model_name == 'ff':
-        model = FeedForwardModel(in_size=obs_dim, out_sizes=[100, 100, env.action_space.n], verbose=verbose)
+        observation_examples = np.random.random((20000, 4)) * 2 - 1
+        model = FeedForwardModel(in_size=obs_dim, out_sizes=[100, 32, env.action_space.n], normalize=False, verbose=verbose)
+        model.fit_features(observation_examples, env)
+        gamma = 0.1
 
-    return model
+    return model, gamma
 
 np.random.seed(0)
 if __name__ == '__main__':
@@ -32,8 +36,8 @@ if __name__ == '__main__':
     env.seed(0)
     verbose = False
     models = ['rbf', 'ff']
-    model = create_model(env, models[1], verbose=verbose)
-    gamma = 0.99
+    model, gamma = create_model(env, models[1], verbose=verbose)
+
     agent = QLearningFunctionAproximationAgent(model=model, eps=1.0, gamma=gamma, verbose=verbose)
 
     monitor = True
@@ -43,7 +47,7 @@ if __name__ == '__main__':
         monitor_dir = os.path.join(monitor_dir, os.pardir, os.pardir, os.pardir, 'temp')
         env = wrappers.Monitor(env, monitor_dir, force=True)
 
-    num_iter = 300
+    num_iter = 1200
     total_steps = 0
     returns = []
     for i in range(num_iter):
