@@ -1,5 +1,5 @@
 from keras.models import Sequential
-from keras.layers.core import Dense
+from keras.layers.core import Dense, Dropout
 from keras.optimizers import sgd, adam, rmsprop, adagrad, adadelta
 from keras.regularizers import l2, l1, l1_l2
 
@@ -8,22 +8,22 @@ from sklearn.preprocessing import StandardScaler
 import numpy as np
 
 class FeedForwardModel(object):
-    def __init__(self, in_size, out_sizes, normalize = True, verbose = False):
+    def __init__(self, in_size, out_sizes, drop_out = None, normalize = False, verbose = False):
         self.verbose = verbose
         self.normalize = normalize
-        self.regularizer = 10e-5
         self.scaler = StandardScaler()
         model = Sequential()
-        model.add(Dense(units=out_sizes[0], input_dim=in_size, activation=('relu' if len(out_sizes) > 1 else 'sigmoid'), kernel_initializer='normal', kernel_regularizer=l2(self.regularizer), bias_regularizer=l2(self.regularizer)))
-        # model.add(Dense(units=out_sizes[0], input_dim=in_size, activation=('relu' if len(out_sizes) > 1 else 'linear')))
+        model.add(Dense(units=out_sizes[0], input_dim=in_size, activation=('tanh' if len(out_sizes) > 1 else 'linear')))
+        if len(out_sizes) > 1 and drop_out != None:
+            model.add(Dropout(drop_out))
         for i in range(1, len(out_sizes)):
-            model.add(Dense(units=out_sizes[i], activation=('relu' if i < len(out_sizes) - 1 else 'linear'), kernel_initializer='normal', kernel_regularizer=l2(self.regularizer), bias_regularizer=l2(self.regularizer)))
-            # model.add(Dense(units=out_sizes[i], activation=('relu' if i < len(out_sizes) - 1 else 'linear')))
+            model.add(Dense(units=out_sizes[i], activation=('tanh' if i < len(out_sizes) - 1 else 'linear')))
 
         print(model.summary())
-        model.compile(sgd(lr=10e-2), "mse")
-        # model.compile(adam(), "mse")
-        # model.compile(adadelta(), "mse")
+        print(model.get_config())
+        # model.compile(sgd(lr=10e-4), "mse")
+        # model.compile(adam(lr=10e-4), "mse")
+        model.compile(adagrad(), "mse")
         self._model = model
 
     def fit_features(self, observations, env):

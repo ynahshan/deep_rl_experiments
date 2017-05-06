@@ -160,11 +160,12 @@ class QLearningTabularAgent(object):
             return np.random.choice(action_space)
 
 class QLearningFunctionAproximationAgent(object):
-    def __init__(self, model, eps=1.0, gamma=0.9, verbose=False):
+    def __init__(self, model, eps=1.0, eps_decay = 0.99, gamma=0.9, verbose=False):
         self.eps = eps
         self.gamma = gamma
         self.epoch = 0
-        self.eps_ctr = 1.0
+        self.eps_decay = eps_decay
+        self.eps_min = 0
         self.random_actions = 0
         self.greedy_actions = 0
         self.verbose = verbose
@@ -177,14 +178,13 @@ class QLearningFunctionAproximationAgent(object):
     def choose_action(self, env, s):
         # choose an action based on epsilon-greedy strategy
         r = np.random.rand()
-        eps = self.eps / self.eps_ctr
-        if r < eps:
+        if r < self.eps:
             # take a random action
             next_move = env.action_space.sample()
             self.random_actions += 1
             if self.verbose:
                 print("Taking a random action %s" % next_move)
-                print("epsilon: %r < %f" % (r, eps))
+                print("epsilon: %r < %f" % (r, self.eps))
         else:
             # choose the best action based on current values of states
             # loop through all possible moves, get their values
@@ -211,10 +211,14 @@ class QLearningFunctionAproximationAgent(object):
 
             # alpha = self.alpha / self.update_counts_sa[s][a]
             # self.update_counts_sa[s][a] += 0.005
-            y = self.model.predict(s2)
-            G = r + self.gamma * np.max(y)
-            y[a] = G
-            self.model.update(s, a, y)
+            if not done:
+                y_s2 = self.model.predict(s2)
+                G = r + self.gamma * np.max(y_s2)
+            else:
+                G = r
+            y_s = self.model.predict(s)
+            y_s[a] = G
+            self.model.update(s, a, y_s)
 
             steps += 1
             s = s2
@@ -225,7 +229,7 @@ class QLearningFunctionAproximationAgent(object):
         #     self.print_Q(self.Q)
         #     print()
         self.epoch += 1
-        self.eps_ctr += 1
+        self.eps *= self.eps_decay
         return steps, total_return, r
 
     '''

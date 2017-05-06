@@ -23,10 +23,8 @@ def create_model(env, model_name, verbose=False):
         model.fit_features(observation_examples, env)
         gamma = 0.99
     elif model_name == 'ff':
-        observation_examples = np.random.random((20000, 4)) * 2 - 1
-        model = FeedForwardModel(in_size=obs_dim, out_sizes=[100, 32, env.action_space.n], normalize=False, verbose=verbose)
-        model.fit_features(observation_examples, env)
-        gamma = 0.1
+        model = FeedForwardModel(in_size=obs_dim, out_sizes=[128, 64, 32, env.action_space.n],verbose=verbose)
+        gamma = 0.9
 
     return model, gamma
 
@@ -38,7 +36,7 @@ if __name__ == '__main__':
     models = ['rbf', 'ff']
     model, gamma = create_model(env, models[1], verbose=verbose)
 
-    agent = QLearningFunctionAproximationAgent(model=model, eps=1.0, gamma=gamma, verbose=verbose)
+    agent = QLearningFunctionAproximationAgent(model=model, eps_decay=0.98, gamma=gamma, verbose=verbose)
 
     monitor = True
     if monitor:
@@ -47,7 +45,7 @@ if __name__ == '__main__':
         monitor_dir = os.path.join(monitor_dir, os.pardir, os.pardir, os.pardir, 'temp')
         env = wrappers.Monitor(env, monitor_dir, force=True)
 
-    num_iter = 1200
+    num_iter = 500
     total_steps = 0
     returns = []
     for i in range(num_iter):
