@@ -26,7 +26,7 @@ class FeedForwardModel(object):
         model.compile(adagrad(), "mse")
         self._model = model
 
-    def fit_features(self, observations, env):
+    def fit_features(self, observations):
         if observations.ndim == 1:
             observations = observations.reshape((observations.shape[0], 1))
 

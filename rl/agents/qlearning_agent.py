@@ -175,7 +175,7 @@ class QLearningFunctionAproximationAgent(object):
     def adjust(self):
         self.model.adjust()
 
-    def choose_action(self, env, s):
+    def choose_action(self, env, s, y_s):
         # choose an action based on epsilon-greedy strategy
         r = np.random.rand()
         if r < self.eps:
@@ -186,11 +186,8 @@ class QLearningFunctionAproximationAgent(object):
                 print("Taking a random action %s" % next_move)
                 print("epsilon: %r < %f" % (r, self.eps))
         else:
-            # choose the best action based on current values of states
-            # loop through all possible moves, get their values
-            # keep track of the best value
             self.greedy_actions += 1
-            next_move = np.argmax(self.model.predict(s))
+            next_move = np.argmax(y_s)
             if self.verbose:
                 print("Taking a greedy action %s" % next_move)
 
@@ -201,35 +198,43 @@ class QLearningFunctionAproximationAgent(object):
         done = False
         s = env.reset()
         total_return = 0
+        actions = []
         while not done:
+            # predict Q value for current state s
+            y_s = self.model.predict(s)
+            if self.verbose:
+                print("Step %d:" % steps)
+                print("Observed state %s. Predicted value: %s" % (s, y_s))
             # epsilon greedy action selection
-            a = self.choose_action(env, s)
+            a = self.choose_action(env, s, y_s)
+            actions.append(a)
             s2, r, done, _ = env.step(a)
             total_return += r
-            # if s not in self.update_counts_sa:
-            #     self.update_counts_sa[s] = np.ones(env.action_space.n)
 
-            # alpha = self.alpha / self.update_counts_sa[s][a]
-            # self.update_counts_sa[s][a] += 0.005
             if not done:
                 y_s2 = self.model.predict(s2)
                 G = r + self.gamma * np.max(y_s2)
             else:
                 G = r
-            y_s = self.model.predict(s)
+
+            if self.verbose:
+                print("Next state %s. Predicted value: %s" % (s2, y_s2))
+                if not done:
+                    print("G = %f + %f*%f = %f" % (r, self.gamma, np.max(y_s2), G))
+                else:
+                    print("G = %f" % r)
             y_s[a] = G
             self.model.update(s, a, y_s)
 
             steps += 1
             s = s2
 
-        # if self.verbose:
-        #     print("\nEpisode finished with reward %f" % r)
-        #     print("Q table:")
-        #     self.print_Q(self.Q)
-        #     print()
         self.epoch += 1
         self.eps *= self.eps_decay
+        if self.verbose:
+            print("Actions sequence for this episode:")
+            print(actions)
+
         return steps, total_return, r
 
     '''

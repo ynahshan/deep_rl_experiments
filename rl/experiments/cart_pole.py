@@ -49,13 +49,13 @@ if __name__ == '__main__':
     total_steps = 0
     returns = []
     for i in range(num_iter):
-        print("Epoch %d" % i)
+        print("Episode %d" % i)
         steps, tot_ret, last_reward = agent.single_episode_train(env)
         total_steps += steps
         returns.append(tot_ret)
         # if i > 0 and (i % 50 == 0):
         #     model.adjust()
-        print('Epoch finished in %d steps. Return %f.' % (steps, tot_ret))
+        print('Episode finished in %d steps. Return %f.' % (steps, tot_ret))
 
     env.close()
 
