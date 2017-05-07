@@ -549,7 +549,7 @@ class GridWorldSolver:
                 self.agent.display_functions(env)
                 print("Agent path")
                 print(path)
-                print("Reward: %.1f" % total_reward)
+                print("Total Return: %.1f" % total_reward)
             rewards[i] = last_action_reward
         print()
         if verbosity >= 1:

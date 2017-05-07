@@ -55,7 +55,7 @@ def create_agent(env, agent_type, gamma, alpha, verbosity=0):
     elif agent_type == "qlearning":
         agent = QLearningTabularAgent(gamma=gamma, alpha=alpha, env_descriptor=EnvDescriptor(), verbose=verbosity >= agent_verb_level)
     elif agent_type == "qlearning_fa":
-        model, gamma = create_model(env, 'ff')
+        model, gamma = create_model(env, 'rbf')
         agent = QLearningFunctionAproximationAgent(model=model, gamma=gamma, eps_decay=0.9, verbose=verbosity >= agent_verb_level)
 
     return agent

@@ -9,8 +9,10 @@ import timeit
 import numpy as np
 
 class SarsaTabularAgent(object):
-    def __init__(self, eps=1.0, gamma=0.9, alpha=0.1, env_descriptor = None, verbose=False):
+    def __init__(self, eps=1.0, eps_decay = 0.99, eps_min=0.05, gamma=0.9, alpha=0.1, env_descriptor = None, verbose=False):
         self.eps = eps
+        self.eps_decay = eps_decay
+        self.eps_min = eps_min
         self.gamma = gamma
         self.alpha = alpha
         self.epoch = 0
@@ -27,15 +29,14 @@ class SarsaTabularAgent(object):
     def choose_action(self, env, s):
         # choose an action based on epsilon-greedy strategy
         r = np.random.rand()
-        eps = float(self.eps) / (self.epoch + 1)
-        if r < eps:
+        if r < self.eps:
             # take a random action
             next_move = np.random.choice(env.action_space.n)
             self.random_actions += 1
             if self.verbose:
                 if self.env_descriptor != None:
                     print("Taking a random action " + self.env_descriptor.action_to_str(next_move))
-                print("epsilon: %r < %f" % (r, eps))
+                print("epsilon: %r < %f" % (r, self.eps))
         else:
             # choose the best action based on current values of states
             # loop through all possible moves, get their values
@@ -89,21 +90,18 @@ class SarsaTabularAgent(object):
                 
             steps += 1
             # Increase epsilon as workaround to stacking in infinite actions chain
-            if self.env_descriptor != None and steps > self.env_descriptor.episod_limit and self.epoch > 1:
-                self.epoch /= 2
+            # if self.env_descriptor != None and steps > self.env_descriptor.episod_limit and self.epoch > 1:
+            #     self.epoch /= 2
 
         if self.verbose:
             print("\nEpisode finished with reward %f" % r)
             print("Q table:")
             self.print_Q(self.Q)
             print()
+
         self.epoch += 1
-            
-#         elapsed = timeit.default_timer() - start_time
-#         if verbosity >= 2:
-#             print("Solved in %d steps" % len(self.state_history))
-#             print("Time to solve grid %.3f[ms]" % (elapsed * 1000))
-#             print("Random actions %d, greedy actions %d" % (self.random_actions, self.greedy_actions))
+        if self.eps > self.eps_min:
+            self.eps *= self.eps_decay
 
         return steps, total_return, r
             

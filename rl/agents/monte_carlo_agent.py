@@ -9,10 +9,12 @@ import timeit
 import numpy as np
 
 class MonteCarloTabularAgent(object):
-    def __init__(self, eps=1.0, gamma=0.9, env_descriptor = None, verbose=False):
+    def __init__(self, eps=1.0, eps_decay = 0.99, eps_min=0.05, gamma=0.9, env_descriptor = None, verbose=False):
         self.eps = eps
         self.gamma = gamma
         self.epoch = 0
+        self.eps_decay = eps_decay
+        self.eps_min = eps_min
         self.policy = {}
         self.Q = {}
         self.returns = {}
@@ -27,15 +29,14 @@ class MonteCarloTabularAgent(object):
     def choose_action(self, env, s):
         # choose an action based on epsilon-greedy strategy
         r = np.random.rand()
-        eps = float(self.eps) / (self.epoch + 1)
-        if r < eps:
+        if r < self.eps:
             # take a random action
             next_move = np.random.choice(env.action_space.n)
             self.random_actions += 1
             if self.verbose:
                 if self.env_descriptor != None:
                     print("Taking a random action " + self.env_descriptor.action_to_str(next_move))
-                print("epsilog: %r < %f" % (r, eps))
+                print("epsilog: %r < %f" % (r, self.eps))
         else:
             # choose the best action based on current values of states
             # loop through all possible moves, get their values
@@ -49,8 +50,6 @@ class MonteCarloTabularAgent(object):
         return next_move
 
     def single_episode_exploration(self, env):
-#         start_time = timeit.default_timer()
-        # loops until grid is solved
         steps = 0
         states_actions_rewards = []
         s = env.reset()
@@ -67,18 +66,15 @@ class MonteCarloTabularAgent(object):
                 
             steps += 1
             # Increase epsilon as workaround to stacking in infinite actions chain
-            if self.env_descriptor != None and steps > self.env_descriptor.episod_limit and self.epoch > 1:
-                self.epoch /= 2
+            # if self.env_descriptor != None and steps > self.env_descriptor.episod_limit and self.epoch > 1:
+            #     self.epoch /= 2
                 
         if self.verbose:
             print("Episode finished\n")
+
         self.epoch += 1
-            
-#         elapsed = timeit.default_timer() - start_time
-#         if verbosity >= 2:
-#             print("Solved in %d steps" % len(self.state_history))
-#             print("Time to solve grid %.3f[ms]" % (elapsed * 1000))
-#             print("Random actions %d, greedy actions %d" % (self.random_actions, self.greedy_actions))
+        if self.eps > self.eps_min:
+            self.eps *= self.eps_decay
 
         return states_actions_rewards, steps
             
@@ -92,6 +88,10 @@ class MonteCarloTabularAgent(object):
 #         self.V = model.reshape(2, int(model.size / 2))[0]
 #         self.policy = model.reshape(2, int(model.size / 2))[1]
         pass
+
+    def print_Q(self, Q):
+        for s in Q:
+            print("%d %s" % (s, str(self.Q[s])))
 
     '''
     Interface method
@@ -137,11 +137,15 @@ class MonteCarloTabularAgent(object):
     
         for s in self.Q:
             self.policy[s] = np.argmax(self.Q[s])
-        if self.verbose:
-#             env.show_policy(self.policy)
-            print(self.Q)
-            
-        return steps, total_return, 0
+
+        r = states_actions_rewards[-1][2]
+        # if self.verbose:
+        #     print("\nEpisode finished with reward %f" % r)
+        #     print("Q table:")
+        #     self.print_Q(self.Q)
+        #     print()
+
+        return steps, total_return, r
     
     '''
     Interface method
@@ -163,7 +167,11 @@ class MonteCarloTabularAgent(object):
             if env != None:
                 if self.verbose:
                     print("Epoch %d." % i)
-                steps += self.single_episode_train(env)
+                stps, tot_ret, last_reward = self.single_episode_train(env)
+                if self.verbose:
+                    print("Episode total return: %f" % tot_ret)
+                    print("Episode final reward: %f" % last_reward)
+                steps += stps
                     
         print()
         return steps

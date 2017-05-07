@@ -30,9 +30,9 @@ def create_agent(env, agent_type, gamma, alpha, verbosity=0):
     if agent_type == "policy_it":
         agent = PolicyIterationAgent(env.num_states, env.all_actions())
     elif agent_type == "monte_carlo":
-        agent = MonteCarloTabularAgent(gamma=gamma, env_descriptor=EnvDescriptor(env), verbose=verbosity >= agent_verb_level)
+        agent = MonteCarloTabularAgent(gamma=gamma, eps_decay=0.999, eps_min=0.2, env_descriptor=EnvDescriptor(env), verbose=verbosity >= agent_verb_level)
     elif agent_type == "sarsa":
-        agent = SarsaTabularAgent(gamma=gamma, alpha=alpha, env_descriptor=EnvDescriptor(env), verbose=verbosity >= agent_verb_level)
+        agent = SarsaTabularAgent(gamma=gamma, eps_decay=0.9, alpha=alpha, env_descriptor=EnvDescriptor(env), verbose=verbosity >= agent_verb_level)
     elif agent_type == "qlearning":
         agent = QLearningTabularAgent(gamma=gamma, alpha=alpha, env_descriptor=EnvDescriptor(env), verbose=verbosity >= agent_verb_level)
         
@@ -57,7 +57,7 @@ def train_agent(agent_name, env_type, gamma, alpha, verbosity=1):
     total_steps = 0
     total_iterations = 0
     convergence_count = 0
-    CONVERGENCE_LIMIT = 10e-4
+    CONVERGENCE_LIMIT = 10e-3
     CONVERGENCE_STOP_COUNT = 2
 
     while not converged:
@@ -100,10 +100,10 @@ if __name__ == '__main__':
     # Prepare Agent
     verbosity = 1  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
     env_type = EnvironmentFactory.EnvironmentType.RandomPlayerAndGoal
-#     agents = ["policy_it", "monte_carlo", "sarsa", "qlearning"]
-#     agents = ["monte_carlo", "sarsa", "qlearning"]
-#     agents = ["sarsa", "qlearning"]
-    agents = ["qlearning"]
+    agents = ["policy_it", "monte_carlo", "sarsa", "qlearning"]
+    # agents = ["monte_carlo", "sarsa", "qlearning"]
+    # agents = ["sarsa", "qlearning"]
+    # agents = ["sarsa"]
 
     res = {}
     max_it = -1
