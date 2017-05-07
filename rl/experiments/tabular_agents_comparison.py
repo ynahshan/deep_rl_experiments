@@ -26,14 +26,15 @@ def create_agent(env, agent_type, gamma, alpha, verbosity=0):
         def action_to_str(self, action):
             return env.action_to_str(action)
 
+    agent_verb_level = 3
     if agent_type == "policy_it":
         agent = PolicyIterationAgent(env.num_states, env.all_actions())
     elif agent_type == "monte_carlo":
-        agent = MonteCarloTabularAgent(gamma=gamma, env_descriptor=EnvDescriptor(env), verbose=verbosity >= 2)
+        agent = MonteCarloTabularAgent(gamma=gamma, env_descriptor=EnvDescriptor(env), verbose=verbosity >= agent_verb_level)
     elif agent_type == "sarsa":
-        agent = SarsaTabularAgent(gamma=gamma, alpha=alpha, env_descriptor=EnvDescriptor(env), verbose=verbosity >= 2)
+        agent = SarsaTabularAgent(gamma=gamma, alpha=alpha, env_descriptor=EnvDescriptor(env), verbose=verbosity >= agent_verb_level)
     elif agent_type == "qlearning":
-        agent = QLearningTabularAgent(gamma=gamma, alpha=alpha, env_descriptor=EnvDescriptor(env), verbose=verbosity >= 2)
+        agent = QLearningTabularAgent(gamma=gamma, alpha=alpha, env_descriptor=EnvDescriptor(env), verbose=verbosity >= agent_verb_level)
         
     return agent    
 
@@ -97,12 +98,12 @@ def train_agent(agent_name, env_type, gamma, alpha, verbosity=1):
 
 if __name__ == '__main__':
     # Prepare Agent
-    verbosity = 0  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
+    verbosity = 1  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log
     env_type = EnvironmentFactory.EnvironmentType.RandomPlayerAndGoal
 #     agents = ["policy_it", "monte_carlo", "sarsa", "qlearning"]
-    agents = ["monte_carlo", "sarsa", "qlearning"]
+#     agents = ["monte_carlo", "sarsa", "qlearning"]
 #     agents = ["sarsa", "qlearning"]
-#     agents = ["qlearning"]
+    agents = ["qlearning"]
 
     res = {}
     max_it = -1

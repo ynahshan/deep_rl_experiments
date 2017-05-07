@@ -150,7 +150,8 @@ class SarsaTabularAgent(object):
             if env != None:
                 if self.verbose:
                     print("Epoch %d." % i)
-                steps += self.single_episode_train(env)
+                stps, tot_ret, last_reward = self.single_episode_train(env)
+                steps += stps
                     
         print()
         return steps

@@ -11,6 +11,7 @@ import timeit
 REWARD_GOAL = 10
 REWARD_PIT = -10
 REWARD_STEP = -1
+REWARD_HANG = -5
 
 class EnvironmentFactory:
     class EnvironmentType:
@@ -88,6 +89,7 @@ class EnvironmentBase(object):
         self.wall = wall
         self.wall_cartesian = EnvironmentBase.abs_to_cartesian(wall)
         self.state = state
+        self.steps = 0
     
     def __str__(self):
         return "state %d, player %d, goal %d, pit %d, wall %d" % (self.state, self.player, self.goal, self.pit, self.wall)
@@ -128,6 +130,7 @@ class EnvironmentBase(object):
         return self.state
     
     def step(self, action):
+        self.steps += 1
         # up (row - 1)
         if action == Action.UP:
             new_loc = (self.player_cartesian[0] - 1, self.player_cartesian[1])
@@ -146,8 +149,11 @@ class EnvironmentBase(object):
                 self.player_cartesian = new_loc
                 self.player = EnvironmentBase.cartesian_to_abs(new_loc)
                 self.state = self.player_abs_to_state(self.player)
-                                     
-        return (self.state, self.reward(), self.is_done(), None)
+
+        if self.steps < self.grid_size:
+            return self.state, self.reward(), self.is_done(), None
+        else:
+            return self.state, REWARD_HANG, True, None
     
     '''
     This is cheat function for basic agent RL algorithms which require kind of God mode
@@ -246,6 +252,7 @@ class EnvironmentBase(object):
 class DeterministicEnvironment(EnvironmentBase):
     def __init__(self, player=None, goal=None, pit=None, wall=None, state=None):
         self.num_states = self.grid_size
+        self.steps = 0
         
         if state != None:
             super(DeterministicEnvironment, self).__init__(player, goal, pit, wall, state)
@@ -288,6 +295,7 @@ class DeterministicEnvironment(EnvironmentBase):
 class RandomPlayerEnvironment(DeterministicEnvironment):
     def __init__(self, player=None, goal=None, pit=None, wall=None, state=None):
         self.num_states = self.grid_size
+        self.steps = 0
         
         if state != None:
             super(RandomPlayerEnvironment, self).__init__(player, goal, pit, wall, state)
@@ -308,6 +316,7 @@ class RandomPlayerEnvironment(DeterministicEnvironment):
 
 class RandomGoalAndPlayerEnvironment(EnvironmentBase):
     def __init__(self, player=None, goal=None, pit=None, wall=None, state=None):
+        self.steps = 0
         if state != None:
             super(RandomGoalAndPlayerEnvironment, self).__init__(player, goal, pit, wall, state)
         else:
@@ -357,6 +366,7 @@ class RandomGoalAndPlayerEnvironment(EnvironmentBase):
 
 class RandomGoalPlayerAndPitEnvironment(EnvironmentBase):    
     def __init__(self, player=None, goal=None, pit=None, wall=None, state=None):
+        self.steps = 0
         if state != None:
             super(RandomGoalPlayerAndPitEnvironment, self).__init__(player, goal, pit, wall, state)
         else:
@@ -409,8 +419,9 @@ class RandomGoalPlayerAndPitEnvironment(EnvironmentBase):
         return 10
 
 
-class FullyRandomEnvironment(EnvironmentBase):    
+class FullyRandomEnvironment(EnvironmentBase):
     def __init__(self, player=None, goal=None, pit=None, wall=None, state=None):
+        self.steps = 0
         if state != None:
             super(FullyRandomEnvironment, self).__init__(player, goal, pit, wall, state)
         else:

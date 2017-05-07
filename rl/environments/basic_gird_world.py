@@ -118,7 +118,7 @@ class BasicGridWorld_v1(GridWorldBase):
         observation = (self._env.player, self._env.goal)
         if done:
             self._env = None
-        
+
         return observation, reward, done, info 
     
     def reset(self):
