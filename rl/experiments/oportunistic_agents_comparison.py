@@ -28,15 +28,16 @@ REWARD_GOAL = 10
 
 def create_model(env, model_name, verbose=False):
     obs = env.reset()
-    obs_dim = len(obs)
+    obs_dim = len(np.array([obs]))
     if model_name == 'rbf':
         observation_examples = np.array([env.observation_space.sample() for x in range(100)])
         model = RbfRegressor(in_size=obs_dim, num_features=200, output_size=env.action_space.n, gammmas=[3.0, 2.0, 1.5, 1.0], normalize=False)
         model.fit_features(observation_examples, env)
         gamma = 0.99
     elif model_name == 'ff':
-        model = FeedForwardModel(in_size=obs_dim, out_sizes=[1000, 100, env.action_space.n],verbose=verbose)
-        gamma = 0.9
+        mid_size = 64
+        model = FeedForwardModel(in_size=obs_dim, out_sizes=[mid_size, mid_size, mid_size, int(mid_size/2), env.action_space.n],verbose=verbose)
+        gamma = 0.99
 
     return model, gamma
 
@@ -55,7 +56,7 @@ def create_agent(env, agent_type, gamma, alpha, verbosity=0):
     elif agent_type == "qlearning":
         agent = QLearningTabularAgent(gamma=gamma, alpha=alpha, env_descriptor=EnvDescriptor(), verbose=verbosity >= agent_verb_level)
     elif agent_type == "qlearning_fa":
-        model, gamma = create_model(env, 'rbf')
+        model, gamma = create_model(env, 'ff')
         agent = QLearningFunctionAproximationAgent(model=model, gamma=gamma, eps_decay=0.9, verbose=verbosity >= agent_verb_level)
 
     return agent
@@ -172,7 +173,7 @@ if __name__ == '__main__':
     agents = ["qlearning_fa"]
     res = {}
     max_it = -1
-    env_name = envs[1]
+    env_name = envs[0]
     for agent in agents:
         res[agent] = train_agent(agent, env_name, gamma=GAMMA, alpha=ALPHA, verbosity=verbosity)
         if res[agent][1] > max_it:
