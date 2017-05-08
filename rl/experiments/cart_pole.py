@@ -11,6 +11,7 @@ from rl.models.mlp_models import FeedForwardModel
 from rl.agents.qlearning_agent import QLearningFunctionAproximationAgent
 
 import matplotlib.pyplot as plt
+import shutil
 
 def create_model(env, model_name, verbose=False):
     obs = env.reset()
@@ -28,6 +29,14 @@ def create_model(env, model_name, verbose=False):
 
     return model, gamma
 
+def set_monitor(env):
+    base_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
+    filename = os.path.basename(__file__).split('.')[0]
+    monitor_dir = filename + '_' + str(datetime.now()).replace(' ', '_').replace(':', '_')
+    monitor_dir = os.path.join(base_dir, 'temp', monitor_dir)
+    print("Writing results to %s" % monitor_dir)
+    return wrappers.Monitor(env, monitor_dir, force=True)
+    
 np.random.seed(0)
 if __name__ == '__main__':
     env = gym.make('CartPole-v0')
@@ -38,12 +47,9 @@ if __name__ == '__main__':
 
     agent = QLearningFunctionAproximationAgent(model=model, eps_decay=0.98, gamma=gamma, verbose=verbose)
 
-    monitor = True
+    monitor = False
     if monitor:
-        filename = os.path.basename(__file__).split('.')[0]
-        monitor_dir = filename + '_' + str(datetime.now()).replace(' ', '_').replace(':', '_')
-        monitor_dir = os.path.join(monitor_dir, os.pardir, os.pardir, os.pardir, 'temp')
-        env = wrappers.Monitor(env, monitor_dir, force=True)
+        env = set_monitor(env)
 
     num_iter = 500
     total_steps = 0

@@ -4,6 +4,9 @@ Created on Apr 30, 2017
 @author: ny
 '''
 
+ 
+from __future__ import print_function
+
 import numpy as np
 from rl.environments.grid_world import RandomPlayerEnvironment, RandomGoalAndPlayerEnvironment, Action
 
