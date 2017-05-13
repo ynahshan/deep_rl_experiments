@@ -12,7 +12,7 @@ from datetime import datetime
 from rl.models.linear_models import RbfRegressor
 from rl.models.mlp_models import FeedForwardModel
 from rl.agents.qlearning_agent import QLearningFunctionAproximationAgent
-from rl.agents.actor_critic_agent import ActorCriticAgent, ValueModel, PolicyModel
+from rl.agents.policy_gradient_agent import PolicyGradientAgent, ValueModel, PolicyModel
 
 import matplotlib.pyplot as plt
 import shutil
@@ -49,7 +49,7 @@ def create_agent(agent_name, env, verbose):
     elif agent_name == 'actor_critic':
         actor = PolicyModel(env.observation_space.shape[0], env.action_space.n, [32], lr=10e-5)
         critic = ValueModel(env.observation_space.shape[0], [32, 16, 16], lr=10e-6)
-        agent = ActorCriticAgent(actor, critic, gamma=0.99)
+        agent = PolicyGradientAgent(actor, critic, gamma=0.99)
 
     return agent
 

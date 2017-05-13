@@ -132,7 +132,7 @@ class ValueModel:
         X = np.atleast_2d(X)
         return self.session.run(self.predict_op, feed_dict={self.X: X})
 
-class ActorCriticAgent(object):
+class PolicyGradientAgent(object):
     def __init__(self, actor, critic, eps=1.0, eps_decay = 0.99, eps_min=0, gamma=0.9, verbose=False):
         self.actor_model = actor
         self.critic_model = critic
