@@ -15,6 +15,7 @@ tf.set_random_seed(0)
 from rl.agents.monte_carlo_agent import MonteCarloTabularAgent
 from rl.agents.sarsa_agent import SarsaTabularAgent
 from rl.agents.qlearning_agent import QLearningTabularAgent, QLearningFunctionAproximationAgent
+from rl.agents.policy_gradient_agent import PolicyGradientAgent, ValueModel, PolicyModel
 
 from rl.environments import gym_like as gym
 from rl.models.linear_models import RbfRegressor
@@ -58,6 +59,10 @@ def create_agent(env, agent_type, gamma, alpha, verbosity=0):
     elif agent_type == "qlearning_fa":
         model, gamma = create_model(env, 'ff')
         agent = QLearningFunctionAproximationAgent(model=model, gamma=gamma, eps_decay=0.9, verbose=verbosity >= agent_verb_level)
+    elif agent_type == "pg":
+        actor = PolicyModel(env.observation_space.shape[0], env.action_space.n, [])
+        critic = ValueModel(env.observation_space.shape[0], [64, 64])
+        agent = PolicyGradientAgent(actor, critic, gamma=0.99)
 
     return agent
 
@@ -84,14 +89,21 @@ def train(agent, env, num_iter, verbosity=0):
         start_time = timeit.default_timer()
 
     steps = 0
+    mean_return = 0
+    # num_iter=100
     for i in range(num_iter):
         if verbosity >= 2:
-            print("Epoch %d." % i)
+            print("Episode %d." % i)
         stps, total_return, r = agent.single_episode_train(env)
+        mean_return+=total_return
+        if verbosity >= 2:
+            print("Episode return: %f" % total_return)
         steps += stps
 
+    mean_return /= num_iter
     if verbosity >= 1:
         elapsed = timeit.default_timer() - start_time
+        print("Mean return: %f" % mean_return)
         print("Training time %.3f[ms]" % (elapsed * 1000))
     if verbosity == 0:
         print(" steps: %d" % steps)
@@ -170,7 +182,8 @@ if __name__ == '__main__':
     # agents = ["monte_carlo", "sarsa", "qlearning", "qlearning_fa"]
     # agents = ["sarsa", "qlearning"]
     # agents = ["qlearning"]
-    agents = ["qlearning_fa"]
+    # agents = ["qlearning_fa"]
+    agents = ["pg"]
     res = {}
     max_it = -1
     env_name = envs[0]

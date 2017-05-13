@@ -20,6 +20,7 @@ class ActionSpace(object):
 class ObservationSpace(object):
     def __init__(self, env):
         self.env = env
+        self.shape = np.atleast_1d(self.sample()).shape
 
     def sample(self):
         return self.env._obs_sample()

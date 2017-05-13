@@ -151,6 +151,9 @@ class PolicyGradientAgent(object):
         actor.set_session(self.session)
         critic.set_session(self.session)
 
+    '''
+    Interface method
+    '''
     def single_episode_train(self, env):
         steps = 0
         done = False
@@ -199,3 +202,12 @@ class PolicyGradientAgent(object):
             print(actions)
 
         return steps, total_return, r
+
+    '''
+    Interface method
+    '''
+    def optimal_action(self, s, action_space):
+        y = self.actor_model.predict(s).squeeze()
+        a_good = np.random.choice(action_space, p=y)
+        # a_bad = np.argmax(y)
+        return a_good
