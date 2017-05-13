@@ -1,7 +1,7 @@
 '''
 Created on Apr 27, 2017
 
-@author: ynahshan
+@author: yn
 '''
 
 import sys

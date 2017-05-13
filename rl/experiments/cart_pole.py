@@ -1,7 +1,10 @@
 import gym
 import numpy as np
+np.random.seed(0)
 import pandas as pd
 import os
+import tensorflow as tf
+tf.set_random_seed(0)
 
 from gym import wrappers
 from datetime import datetime
@@ -9,6 +12,7 @@ from datetime import datetime
 from rl.models.linear_models import RbfRegressor
 from rl.models.mlp_models import FeedForwardModel
 from rl.agents.qlearning_agent import QLearningFunctionAproximationAgent
+from rl.agents.actor_critic_agent import ActorCriticAgent, ValueModel, PolicyModel
 
 import matplotlib.pyplot as plt
 import shutil
@@ -36,22 +40,32 @@ def set_monitor(env):
     monitor_dir = os.path.join(base_dir, 'temp', monitor_dir)
     print("Writing results to %s" % monitor_dir)
     return wrappers.Monitor(env, monitor_dir, force=True)
-    
-np.random.seed(0)
+
+def create_agent(agent_name, env, verbose):
+    if agent_name == 'qlearning':
+        models = ['rbf', 'ff']
+        model, gamma = create_model(env, models[1], verbose=verbose)
+        agent = QLearningFunctionAproximationAgent(model=model, eps_decay=0.98, gamma=gamma, verbose=verbose)
+    elif agent_name == 'actor_critic':
+        actor = PolicyModel(env.observation_space.shape[0], env.action_space.n, [32], lr=10e-5)
+        critic = ValueModel(env.observation_space.shape[0], [32, 16, 16], lr=10e-6)
+        agent = ActorCriticAgent(actor, critic, gamma=0.99)
+
+    return agent
+
 if __name__ == '__main__':
     env = gym.make('CartPole-v0')
     env.seed(0)
     verbose = False
-    models = ['rbf', 'ff']
-    model, gamma = create_model(env, models[1], verbose=verbose)
 
-    agent = QLearningFunctionAproximationAgent(model=model, eps_decay=0.98, gamma=gamma, verbose=verbose)
+    agents = ['qlearning', 'actor_critic']
+    agent = create_agent(agents[1], env, verbose=verbose)
 
     monitor = False
     if monitor:
         env = set_monitor(env)
 
-    num_iter = 500
+    num_iter = 200
     total_steps = 0
     returns = []
     for i in range(num_iter):
