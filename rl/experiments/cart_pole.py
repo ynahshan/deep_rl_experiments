@@ -47,8 +47,8 @@ def create_agent(agent_name, env, verbose):
         model, gamma = create_model(env, models[1], verbose=verbose)
         agent = QLearningFunctionAproximationAgent(model=model, eps_decay=0.98, gamma=gamma, verbose=verbose)
     elif agent_name == 'actor_critic':
-        actor = PolicyModel(env.observation_space.shape[0], env.action_space.n, [32], lr=10e-5)
-        critic = ValueModel(env.observation_space.shape[0], [32, 16, 16], lr=10e-6)
+        actor = PolicyModel(env.observation_space.shape[0], env.action_space.n, [])
+        critic = ValueModel(env.observation_space.shape[0], [32, 16, 16])
         agent = PolicyGradientAgent(actor, critic, gamma=0.99)
 
     return agent
@@ -65,7 +65,7 @@ if __name__ == '__main__':
     if monitor:
         env = set_monitor(env)
 
-    num_iter = 200
+    num_iter = 500
     total_steps = 0
     returns = []
     for i in range(num_iter):
