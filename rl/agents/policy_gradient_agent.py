@@ -64,7 +64,15 @@ class PolicyModel:
 
         # self.selected_probs = selected_probs
         cost = -tf.reduce_sum(self.advantages * selected_probs)
-        self.train_op = tf.train.AdagradOptimizer(learning_rate=lr).minimize(cost)
+        optimizer = tf.train.AdagradOptimizer(learning_rate=lr)
+
+        gvs = optimizer.compute_gradients(cost)
+        capped_gvs = [(tf.clip_by_average_norm(grad, 1.0), var) for grad, var in gvs]
+        self.train_op = optimizer.apply_gradients(capped_gvs)
+
+        # gradients, variables = zip(*optimizer.compute_gradients(cost))
+        # gradients, _ = tf.clip_by_global_norm(gradients, 100.0)
+        # self.train_op = optimizer.apply_gradients(zip(gradients, variables))
 
     def set_session(self, session):
         self.session = session
