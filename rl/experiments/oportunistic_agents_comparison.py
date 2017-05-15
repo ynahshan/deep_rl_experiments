@@ -16,6 +16,7 @@ from rl.agents.monte_carlo_agent import MonteCarloTabularAgent
 from rl.agents.sarsa_agent import SarsaTabularAgent
 from rl.agents.qlearning_agent import QLearningTabularAgent, QLearningFunctionAproximationAgent
 from rl.agents.policy_gradient_agent import PolicyGradientAgent, ValueModel, PolicyModel
+from rl.agents.dqn_agent import DQNAgent, DQNModel
 
 from rl.environments import gym_like as gym
 from rl.models.linear_models import RbfRegressor
@@ -63,6 +64,14 @@ def create_agent(env, agent_type, gamma, alpha, verbosity=0):
         actor = PolicyModel(env.observation_space.shape[0], env.action_space.n, [])
         critic = ValueModel(env.observation_space.shape[0], [64, 64])
         agent = PolicyGradientAgent(actor, critic, gamma=0.99)
+    elif agent_type == "dqn":
+        D = env.observation_space.shape[0]
+        K = env.action_space.n
+        sizes = [4, 4]
+        gamma = 0.99
+        model = DQNModel(D, K, sizes, gamma=gamma, min_experiences=10, max_experiences=400, batch_sz=8)
+        target_model = DQNModel(D, K, sizes, gamma=gamma, min_experiences=10, max_experiences=400, batch_sz=4)
+        agent = DQNAgent(model, target_model, gamma=gamma, copy_period=50)
 
     return agent
 
@@ -184,6 +193,7 @@ if __name__ == '__main__':
     # agents = ["qlearning"]
     # agents = ["qlearning_fa"]
     agents = ["pg"]
+    # agents = ["dqn"]
     res = {}
     max_it = -1
     env_name = envs[0]

@@ -98,11 +98,11 @@ class BasicGridWorld_v0(GridWorldBase):
         if done:
             self._env = None
             
-        return observation, reward, done, info 
+        return (observation), reward, done, info
     
     def reset(self):
         self._env = RandomPlayerEnvironment()
-        return self._env.state
+        return (self._env.state)
 
     def state_pos(self, pos):
         return pos

@@ -13,6 +13,7 @@ from rl.models.linear_models import RbfRegressor
 from rl.models.mlp_models import FeedForwardModel
 from rl.agents.qlearning_agent import QLearningFunctionAproximationAgent
 from rl.agents.policy_gradient_agent import PolicyGradientAgent, ValueModel, PolicyModel
+from rl.agents.dqn_agent import DQNAgent, DQNModel
 
 import matplotlib.pyplot as plt
 import shutil
@@ -46,10 +47,18 @@ def create_agent(agent_name, env, verbose):
         models = ['rbf', 'ff']
         model, gamma = create_model(env, models[1], verbose=verbose)
         agent = QLearningFunctionAproximationAgent(model=model, eps_decay=0.98, gamma=gamma, verbose=verbose)
-    elif agent_name == 'actor_critic':
+    elif agent_name == 'pgrad':
         actor = PolicyModel(env.observation_space.shape[0], env.action_space.n, [])
         critic = ValueModel(env.observation_space.shape[0], [32, 16, 16])
         agent = PolicyGradientAgent(actor, critic, gamma=0.99)
+    elif agent_name == 'dqn':
+        D = len(env.observation_space.sample())
+        K = env.action_space.n
+        sizes = [200, 200]
+        gamma = 0.99
+        model = DQNModel(D, K, sizes, gamma=gamma)
+        target_model = DQNModel(D, K, sizes, gamma=gamma)
+        agent = DQNAgent(model, target_model, gamma=gamma, copy_period=50)
 
     return agent
 
@@ -58,14 +67,14 @@ if __name__ == '__main__':
     env.seed(0)
     verbose = False
 
-    agents = ['qlearning', 'actor_critic']
-    agent = create_agent(agents[1], env, verbose=verbose)
+    agents = ['qlearning', 'pgrad', 'dqn']
+    agent = create_agent(agents[2], env, verbose=verbose)
 
     monitor = False
     if monitor:
         env = set_monitor(env)
 
-    num_iter = 500
+    num_iter = 300
     total_steps = 0
     returns = []
     for i in range(num_iter):
