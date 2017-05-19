@@ -1,5 +1,5 @@
 import sys
-sys.path.remove(r'E:\machine-learning\deep_rl_experiments')
+# sys.path.remove(r'E:\machine-learning\deep_rl_experiments')
 # print("\n".join(sys.path))
 
 import numpy as np
@@ -10,9 +10,9 @@ from keras.models import Sequential
 from keras.layers import Dense, Activation, Flatten
 from keras.optimizers import Adam
 
-from rl_gym.agents.dqn import DQNAgent
-from rl_gym.policy import BoltzmannQPolicy
-from rl_gym.memory import SequentialMemory
+from rl.agents.dqn import DQNAgent
+from rl.policy import BoltzmannQPolicy
+from rl.memory import SequentialMemory
 
 if __name__ == '__main__':
     ENV_NAME = 'CartPole-v0'
