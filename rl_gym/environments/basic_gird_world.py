@@ -8,7 +8,7 @@ Created on Apr 30, 2017
 from __future__ import print_function
 
 import numpy as np
-from rl.environments.grid_world import RandomPlayerEnvironment, RandomGoalAndPlayerEnvironment, Action
+from rl_gym.environments.grid_world import RandomPlayerEnvironment, RandomGoalAndPlayerEnvironment, Action
 
 class ActionSpace(object):
     def __init__(self, n):

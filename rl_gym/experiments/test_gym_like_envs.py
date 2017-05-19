@@ -4,7 +4,7 @@ Created on Apr 30, 2017
 @author: ny
 '''
 
-from rl.environments import gym_like as gym
+from rl_gym.environments import gym_like as gym
 
 if __name__ == '__main__':
     print(gym.env_list())

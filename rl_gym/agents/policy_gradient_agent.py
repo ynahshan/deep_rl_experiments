@@ -3,7 +3,7 @@ import timeit
 import numpy as np
 import tensorflow as tf
 
-from rl.models.tf_layers import HiddenLayer
+from rl_gym.models.tf_layers import HiddenLayer
 
 # approximates pi(a | s)
 class PolicyModel:

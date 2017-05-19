@@ -3,7 +3,7 @@ import timeit
 import numpy as np
 import tensorflow as tf
 
-from rl.models.tf_layers import HiddenLayer
+from rl_gym.models.tf_layers import HiddenLayer
 
 class DQNModel:
     def __init__(self, D, K, hidden_layer_sizes, gamma, max_experiences=10000, min_experiences=100, batch_sz=32):

@@ -6,8 +6,8 @@ Created on Apr 22, 2017
 
 import numpy as np
 
-from rl.agents.policy_iteration_agent import PolicyIterationAgent
-from rl.environments.grid_world import GridWorldSolver, EnvironmentFactory, REWARD_GOAL
+from rl_gym.agents.policy_iteration_agent import PolicyIterationAgent
+from rl_gym.environments.grid_world import GridWorldSolver, EnvironmentFactory, REWARD_GOAL
 
 if __name__ == '__main__':
     verbosity = 2  # 0 - no verbosity; 1 - show prints between episodes; 2 - show agent log

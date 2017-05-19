@@ -12,16 +12,16 @@ np.random.seed(0)
 import tensorflow as tf
 tf.set_random_seed(0)
 
-from rl.agents.monte_carlo_agent import MonteCarloTabularAgent
-from rl.agents.sarsa_agent import SarsaTabularAgent
-from rl.agents.qlearning_agent import QLearningTabularAgent, QLearningFunctionAproximationAgent
-from rl.agents.policy_gradient_agent import PolicyGradientAgent, ValueModel, PolicyModel
-from rl.agents.dqn_agent import DQNAgent, DQNModel
+from rl_gym.agents.monte_carlo_agent import MonteCarloTabularAgent
+from rl_gym.agents.sarsa_agent import SarsaTabularAgent
+from rl_gym.agents.qlearning_agent import QLearningTabularAgent, QLearningFunctionAproximationAgent
+from rl_gym.agents.policy_gradient_agent import PolicyGradientAgent, ValueModel, PolicyModel
+from rl_gym.agents.dqn_agent import DQNAgent, DQNModel
 
-from rl.environments import gym_like as gym
-from rl.models.linear_models import RbfRegressor
-from rl.models.mlp_models import FeedForwardModel
-from rl.environments.grid_world import GridWorldSolver, EnvironmentFactory, EnvironmentBase
+from rl_gym.environments import gym_like as gym
+from rl_gym.models.linear_models import RbfRegressor
+from rl_gym.models.mlp_models import FeedForwardModel
+from rl_gym.environments.grid_world import GridWorldSolver, EnvironmentFactory, EnvironmentBase
 
 GAMMA = 0.9
 ALPHA = 0.8

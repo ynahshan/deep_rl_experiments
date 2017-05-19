@@ -8,11 +8,11 @@ import timeit
 import matplotlib.pyplot as plt
 import numpy as np
 
-from rl.environments.grid_world import GridWorldSolver, EnvironmentFactory, REWARD_GOAL
-from rl.agents.monte_carlo_agent import MonteCarloTabularAgent
-from rl.agents.policy_iteration_agent import PolicyIterationAgent
-from rl.agents.sarsa_agent import SarsaTabularAgent
-from rl.agents.qlearning_agent import QLearningTabularAgent
+from rl_gym.environments.grid_world import GridWorldSolver, EnvironmentFactory, REWARD_GOAL
+from rl_gym.agents.monte_carlo_agent import MonteCarloTabularAgent
+from rl_gym.agents.policy_iteration_agent import PolicyIterationAgent
+from rl_gym.agents.sarsa_agent import SarsaTabularAgent
+from rl_gym.agents.qlearning_agent import QLearningTabularAgent
 
 np.random.seed(0)
 GAMMA = 0.7

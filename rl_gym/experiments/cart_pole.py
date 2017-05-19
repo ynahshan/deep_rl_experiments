@@ -9,11 +9,11 @@ tf.set_random_seed(0)
 from gym import wrappers
 from datetime import datetime
 
-from rl.models.linear_models import RbfRegressor
-from rl.models.mlp_models import FeedForwardModel
-from rl.agents.qlearning_agent import QLearningFunctionAproximationAgent
-from rl.agents.policy_gradient_agent import PolicyGradientAgent, ValueModel, PolicyModel
-from rl.agents.dqn_agent import DQNAgent, DQNModel
+from rl_gym.models.linear_models import RbfRegressor
+from rl_gym.models.mlp_models import FeedForwardModel
+from rl_gym.agents.qlearning_agent import QLearningFunctionAproximationAgent
+from rl_gym.agents.policy_gradient_agent import PolicyGradientAgent, ValueModel, PolicyModel
+from rl_gym.agents.dqn_agent import DQNAgent, DQNModel
 
 import matplotlib.pyplot as plt
 import shutil
